@@ -1,0 +1,5 @@
+{
+  "name": "Diário de Bordo Local",
+  "description": "Sistema de registro de atendimentos e diário de bordo local-first com Kanban, gestão de prazos e persistência em IndexedDB.",
+  "requestFramePermissions": []
+}
