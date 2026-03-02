@@ -26,7 +26,7 @@ import { Task, TaskStatus, TaskCategory } from './types';
 
 // --- Components ---
 
-const Toast = ({ message, type = 'success', onClose }: { message: string, type?: 'success' | 'error', onClose: () => void }) => {
+const Toast = ({ message, type = 'success', onClose }: { message: string, type?: 'success' | 'error' | 'warning', onClose: () => void }) => {
   useEffect(() => {
     const timer = setTimeout(onClose, 3000);
     return () => clearTimeout(timer);
@@ -40,6 +40,8 @@ const Toast = ({ message, type = 'success', onClose }: { message: string, type?:
       className={`fixed bottom-6 right-6 z-[100] flex items-center gap-3 px-5 py-3 rounded-2xl shadow-2xl border backdrop-blur-md ${
         type === 'success' 
           ? 'bg-emerald-500/90 border-emerald-400 text-white' 
+          : type === 'warning'
+          ? 'bg-amber-500/90 border-amber-400 text-white'
           : 'bg-red-500/90 border-red-400 text-white'
       }`}
     >
@@ -116,35 +118,66 @@ const ComboBox = ({ label, value, options, onChange, placeholder }: ComboBoxProp
   );
 };
 
-const ThemeToggle = () => {
-  const [isDark, setIsDark] = useState(false);
-
-  useEffect(() => {
+const useTheme = () => {
+  const [theme, setTheme] = useState<'light' | 'dark'>(() => {
     const saved = localStorage.getItem('theme');
     if (saved === 'dark' || (!saved && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-      setIsDark(true);
-      document.documentElement.classList.add('dark');
+      return 'dark';
     }
-  }, []);
+    return 'light';
+  });
 
-  const toggle = () => {
-    setIsDark(!isDark);
-    if (!isDark) {
+  useEffect(() => {
+    if (theme === 'dark') {
       document.documentElement.classList.add('dark');
       localStorage.setItem('theme', 'dark');
     } else {
       document.documentElement.classList.remove('dark');
       localStorage.setItem('theme', 'light');
     }
-  };
+  }, [theme]);
 
+  const toggleTheme = () => setTheme(prev => prev === 'light' ? 'dark' : 'light');
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'j') {
+        e.preventDefault();
+        toggleTheme();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
+  return { theme, toggleTheme };
+};
+
+const ThemeToggle = ({ theme, onToggle }: { theme: 'light' | 'dark', onToggle: () => void }) => {
   return (
     <button 
-      onClick={toggle}
-      className="p-2 rounded-lg hover:bg-zinc-200 dark:hover:bg-zinc-800 transition-colors"
-      title="Alternar Tema"
+      onClick={onToggle}
+      className="p-2.5 rounded-xl bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-all active:scale-90 group relative"
+      title="Alternar Tema (Ctrl+J)"
     >
-      {isDark ? <Sun size={20} /> : <Moon size={20} />}
+      <div className="relative w-5 h-5 overflow-hidden">
+        <motion.div
+          initial={false}
+          animate={{ y: theme === 'dark' ? 0 : 30 }}
+          transition={{ type: 'spring', stiffness: 300, damping: 20 }}
+          className="absolute inset-0 flex items-center justify-center"
+        >
+          <Sun size={20} />
+        </motion.div>
+        <motion.div
+          initial={false}
+          animate={{ y: theme === 'light' ? 0 : -30 }}
+          transition={{ type: 'spring', stiffness: 300, damping: 20 }}
+          className="absolute inset-0 flex items-center justify-center"
+        >
+          <Moon size={20} />
+        </motion.div>
+      </div>
     </button>
   );
 };
@@ -168,83 +201,88 @@ const ListView: React.FC<{
           <ClipboardCheck size={64} />
         </div>
         <p className="text-sm font-black uppercase tracking-[0.3em]">Nenhum registro encontrado</p>
-        <p className="text-xs mt-2 opacity-60">Tente ajustar seus filtros ou adicione um novo atendimento.</p>
+        <p className="text-xs mt-2 opacity-60">Tente ajustar seus filtros ou adicione um novo registro.</p>
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col gap-3 pb-12">
-      <div className="grid grid-cols-[1fr_120px_120px_120px_100px_80px] gap-4 px-6 py-3 text-[10px] font-black uppercase tracking-widest text-zinc-400 border-b border-zinc-200 dark:border-zinc-800">
-        <div>Atendimento / Cliente</div>
-        <div className="hidden md:block">Linha</div>
-        <div className="hidden lg:block">PN</div>
-        <div>Status</div>
-        <div>Prazo</div>
-        <div className="text-right">Ações</div>
-      </div>
-      <AnimatePresence mode="popLayout">
-        {tasks.map(task => {
-          const isOverdue = task.status !== 'Concluído' && new Date(task.deadline) < new Date();
-          return (
-            <motion.div
-              key={task.id}
-              layout
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              onDoubleClick={() => onEdit(task)}
-              className={`grid grid-cols-[1fr_120px_120px_120px_100px_80px] gap-4 items-center px-6 py-3 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl hover:shadow-lg hover:shadow-zinc-200/50 dark:hover:shadow-none transition-all group cursor-pointer ${isOverdue ? 'border-red-200 dark:border-red-900/30 bg-red-50/30 dark:bg-red-900/10' : ''}`}
-            >
-              <div className="flex items-center gap-3 min-w-0">
-                <div className={`w-1 h-6 rounded-full flex-shrink-0 ${
-                  task.category === 'Receptivo/Inbound' ? 'bg-blue-500' :
-                  task.category === 'Ativo/Outbound' ? 'bg-emerald-500' :
-                  task.category === 'Acompanhamento/Follow-up' ? 'bg-amber-500' :
-                  'bg-purple-500'
-                }`} />
-                <div className="truncate">
-                  <p className="text-sm font-bold truncate group-hover:text-emerald-600 transition-colors">{task.title}</p>
-                  <p className="text-[10px] text-zinc-400 font-medium truncate">{task.reason}</p>
+    <div className="flex flex-col gap-2 pb-12 overflow-x-auto">
+      <div className="min-w-[1100px]">
+        <div className="grid grid-cols-[1.2fr_1fr_1.5fr_130px_130px_100px_80px] gap-4 px-6 py-3 text-[10px] font-black uppercase tracking-widest text-zinc-400 border-b border-zinc-200 dark:border-zinc-800">
+          <div>Solicitante / Local</div>
+          <div>Motivo / PN</div>
+          <div>Ação Realizada</div>
+          <div>Interação</div>
+          <div>Agendamento / Conclusão</div>
+          <div>Status</div>
+          <div className="text-right">Ações</div>
+        </div>
+        <AnimatePresence mode="popLayout">
+          {tasks.map(task => {
+            const isOverdue = task.status !== 'Concluído' && new Date(task.deadline) < new Date();
+            return (
+              <motion.div
+                key={task.id}
+                layout
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                onDoubleClick={() => onEdit(task)}
+                className={`grid grid-cols-[1.2fr_1fr_1.5fr_130px_130px_100px_80px] gap-4 items-center px-6 py-3 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl hover:shadow-lg hover:shadow-zinc-200/50 dark:hover:shadow-none transition-all group cursor-pointer mt-2 ${isOverdue ? 'border-red-200 dark:border-red-900/30 bg-red-50/30 dark:bg-red-900/10' : ''}`}
+              >
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className={`w-1 h-6 rounded-full flex-shrink-0 ${isOverdue ? 'bg-red-500' : 'bg-emerald-500'}`} />
+                  <div className="truncate">
+                    <p className="text-sm font-bold truncate group-hover:text-emerald-600 transition-colors">{task.solicitante}</p>
+                    <p className="text-[10px] text-zinc-400 font-medium truncate">{task.line}</p>
+                  </div>
                 </div>
-              </div>
-              <div className="hidden md:block text-[10px] font-black uppercase tracking-widest text-zinc-500 bg-zinc-100 dark:bg-zinc-800 px-2 py-1 rounded-lg text-center truncate">
-                {task.line}
-              </div>
-              <div className="hidden lg:block text-[10px] font-mono font-bold text-zinc-500 truncate">
-                {task.pn}
-              </div>
-              <div>
-                <span className={`text-[9px] font-black uppercase tracking-tighter px-2 py-1 rounded-full ${
-                  task.status === 'A Fazer' ? 'bg-zinc-100 text-zinc-500 dark:bg-zinc-800' :
-                  task.status === 'Em Andamento' ? 'bg-blue-100 text-blue-600 dark:bg-blue-900/30' :
-                  task.status === 'Aguardando' ? 'bg-amber-100 text-amber-600 dark:bg-amber-900/30' :
-                  'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30'
-                }`}>
-                  {task.status}
-                </span>
-              </div>
-              <div className={`text-[10px] font-bold ${isOverdue ? 'text-red-500' : 'text-zinc-500'}`}>
-                {new Date(task.deadline).toLocaleDateString('pt-BR')}
-              </div>
-              <div className="flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                <button 
-                  onClick={() => onEdit(task)}
-                  className="p-1.5 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 text-emerald-600 rounded-lg transition-colors"
-                >
-                  <Pencil size={14} />
-                </button>
-                <button 
-                  onClick={() => onDelete(task.id!)}
-                  className="p-1.5 hover:bg-red-50 dark:hover:bg-red-900/30 text-red-500 rounded-lg transition-colors"
-                >
-                  <Trash2 size={14} />
-                </button>
-              </div>
-            </motion.div>
-          );
-        })}
-      </AnimatePresence>
+                <div className="truncate">
+                  <p className="text-[11px] font-medium truncate">{task.reason}</p>
+                  <p className="text-[10px] text-zinc-400 font-mono truncate">{task.pn || '-'}</p>
+                </div>
+                <div className="truncate">
+                  <p className="text-[11px] text-zinc-500 line-clamp-2 leading-tight">{task.description || '-'}</p>
+                </div>
+                <div className="text-[10px] font-medium text-zinc-500 leading-tight">
+                  {new Date(task.createdAt).toLocaleString('pt-BR').split(' ').map((p, i) => (
+                    <div key={i}>{p}</div>
+                  ))}
+                </div>
+                <div className={`text-[10px] font-bold leading-tight ${isOverdue ? 'text-red-500' : 'text-emerald-600'}`}>
+                  {new Date(task.deadline).toLocaleString('pt-BR').split(' ').map((p, i) => (
+                    <div key={i}>{p}</div>
+                  ))}
+                </div>
+                <div>
+                  <span className={`text-[9px] font-black uppercase tracking-tighter px-2 py-1 rounded-full ${
+                    task.status === 'A Fazer' ? 'bg-zinc-100 text-zinc-500 dark:bg-zinc-800' :
+                    task.status === 'Em Andamento' ? 'bg-blue-100 text-blue-600 dark:bg-blue-900/30' :
+                    'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30'
+                  }`}>
+                    {task.status}
+                  </span>
+                </div>
+                <div className="flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <button 
+                    onClick={() => onEdit(task)}
+                    className="p-1.5 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 text-emerald-600 rounded-lg transition-colors"
+                  >
+                    <Pencil size={14} />
+                  </button>
+                  <button 
+                    onClick={() => onDelete(task.id!)}
+                    className="p-1.5 hover:bg-red-50 dark:hover:bg-red-900/30 text-red-500 rounded-lg transition-colors"
+                  >
+                    <Trash2 size={14} />
+                  </button>
+                </div>
+              </motion.div>
+            );
+          })}
+        </AnimatePresence>
+      </div>
     </div>
   );
 };
@@ -255,16 +293,16 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, onEdit, onDelete, onDragStart
   
   const copyToClipboard = async (e: React.MouseEvent) => {
     e.stopPropagation();
-    const text = `*Detalhes do Atendimento*\n` +
-                 `👤 *Contato:* ${task.title}\n` +
-                 `🔄 *Tipo:* ${task.category}\n` +
-                 `🚛 *Linha:* ${task.line}\n` +
-                 `📦 *PN:* ${task.pn}\n` +
-                 `❓ *Motivo:* ${task.reason}\n` +
-                 `⏰ *Data/Hora:* ${new Date(task.createdAt).toLocaleString('pt-BR')}\n` +
-                 `⏳ *Status Atual:* ${task.status}\n\n` +
-                 `📝 *Notas da Interação:*\n${task.description}\n\n` +
-                 `📅 *Próximo Passo (Agendamento):* ${new Date(task.deadline).toLocaleString('pt-BR')}`;
+    const text = `📋 *DETALHES DO ATENDIMENTO*\n` +
+                  `━━━━━━━━━━━━━━━━━━━━━\n` +
+                  `👤 *Solicitante:* ${task.solicitante}\n` +
+                  `📍 *Local:* ${task.line}\n` +
+                  `📦 *PN:* ${task.pn}\n` +
+                  `❓ *Motivo:* ${task.reason}\n` +
+                  `⏰ *Interação:* ${new Date(task.createdAt).toLocaleString('pt-BR')}\n` +
+                  `⏳ *Status:* ${task.status}\n\n` +
+                  `📝 *Ação:*\n${task.description}\n\n` +
+                  `📅 *${task.status === 'Concluído' ? 'Conclusão' : 'Agendamento'}:* ${new Date(task.deadline).toLocaleString('pt-BR')}`;
     
     try {
       await navigator.clipboard.writeText(text);
@@ -284,25 +322,14 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, onEdit, onDelete, onDragStart
         whileHover={{ y: -2, scale: 1.01 }}
         className={`task-card group relative overflow-hidden cursor-pointer p-3 ${isOverdue ? 'task-card-overdue' : ''}`}
       >
-        <div className={`absolute top-0 left-0 w-1 h-full ${
-          task.category === 'Receptivo/Inbound' ? 'bg-blue-500' :
-          task.category === 'Ativo/Outbound' ? 'bg-emerald-500' :
-          task.category === 'Acompanhamento/Follow-up' ? 'bg-amber-500' :
-          'bg-purple-500'
-        }`} />
+        <div className={`absolute top-0 left-0 w-1 h-full ${isOverdue ? 'bg-red-500' : 'bg-emerald-500'}`} />
 
         <div className="flex justify-between items-start mb-2">
           <div className="flex flex-wrap gap-1">
-            <span className="text-[8px] font-black uppercase tracking-widest text-zinc-400 bg-zinc-100 dark:bg-zinc-800 px-1.5 py-0.5 rounded-md">
-              {task.line.split(' ')[1] || task.line}
-            </span>
             <span className={`text-[8px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded-md ${
-              task.category === 'Receptivo/Inbound' ? 'bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400' :
-              task.category === 'Ativo/Outbound' ? 'bg-emerald-50 text-emerald-600 dark:bg-emerald-900/20 dark:text-emerald-400' :
-              task.category === 'Acompanhamento/Follow-up' ? 'bg-amber-50 text-amber-600 dark:bg-amber-900/20 dark:text-amber-400' :
-              'bg-purple-50 text-purple-600 dark:bg-purple-900/20 dark:text-purple-400'
+              isOverdue ? 'bg-red-50 text-red-600 dark:bg-red-900/20 dark:text-red-400' : 'bg-emerald-50 text-emerald-600 dark:bg-emerald-900/20 dark:text-emerald-400'
             }`}>
-              {task.category.split('/')[0]}
+              {isOverdue ? 'Vencido' : 'Em Dia'}
             </span>
           </div>
           <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -323,28 +350,39 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, onEdit, onDelete, onDragStart
           </div>
         </div>
 
-        <h3 className="text-xs font-bold leading-tight mb-2 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors line-clamp-2">
-          {task.title}
+        <h3 className="text-xs font-bold leading-tight mb-1 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors line-clamp-1">
+          {task.solicitante}
         </h3>
+        <p className="text-[10px] font-medium text-zinc-400 mb-2 truncate">{task.line}</p>
 
-        <div className="grid grid-cols-2 gap-2 mb-2">
-          <div className="flex items-center gap-1 text-zinc-500">
-            <ClipboardCheck size={10} className="shrink-0" />
-            <span className="text-[9px] font-mono font-medium truncate">{task.pn}</span>
-          </div>
-          <div className="flex items-center gap-1 text-zinc-500">
+        <div className="space-y-1.5 mb-2">
+          <div className="flex items-center gap-2 text-zinc-500">
             <Clock size={10} className="shrink-0" />
-            <span className={`text-[9px] font-bold ${isOverdue ? 'text-red-500' : ''}`}>
-              {new Date(task.deadline).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })}
-            </span>
+            <div className="flex flex-col">
+              <span className="text-[8px] uppercase tracking-tighter text-zinc-400 font-black">Interação:</span>
+              <span className="text-[9px] font-medium">
+                {new Date(task.createdAt).toLocaleString('pt-BR')}
+              </span>
+            </div>
+          </div>
+          <div className="flex items-center gap-2 text-zinc-500">
+            <CheckCircle2 size={10} className="shrink-0" />
+            <div className="flex flex-col">
+              <span className="text-[8px] uppercase tracking-tighter text-zinc-400 font-black">
+                {task.status === 'Concluído' ? 'Conclusão:' : 'Agendamento:'}
+              </span>
+              <span className={`text-[9px] font-bold ${isOverdue ? 'text-red-500' : 'text-emerald-600'}`}>
+                {new Date(task.deadline).toLocaleString('pt-BR')}
+              </span>
+            </div>
           </div>
         </div>
 
         <div className="flex items-center justify-between pt-2 border-t border-zinc-100 dark:border-zinc-800">
           <div className="flex items-center gap-1">
             <div className={`w-1 h-1 rounded-full animate-pulse ${isOverdue ? 'bg-red-500' : 'bg-emerald-500'}`} />
-            <span className="text-[8px] font-bold text-zinc-400 uppercase tracking-tighter truncate max-w-[100px]">
-              {task.reason}
+            <span className="text-[8px] font-bold text-zinc-400 uppercase tracking-tighter">
+              {task.status}
             </span>
           </div>
           <button 
@@ -377,6 +415,7 @@ interface ModalProps {
 const TaskModal = ({ task, isOpen, onClose, onSave }: ModalProps) => {
   const [formData, setFormData] = useState<Partial<Task>>({
     title: '',
+    solicitante: '',
     category: 'Receptivo/Inbound',
     line: '',
     pn: '',
@@ -387,24 +426,27 @@ const TaskModal = ({ task, isOpen, onClose, onSave }: ModalProps) => {
     status: 'A Fazer'
   });
 
-  // Hierarchical Options
-  const lineOptions = ['Linha Leves', 'Linha Pesados', 'Linha Agrícola', 'Linha Utilitários'];
-  const pnOptionsMap: Record<string, string[]> = {
-    'Linha Leves': ['PN-1001 (Motor)', 'PN-1002 (Freio)', 'PN-1003 (Suspensão)'],
-    'Linha Pesados': ['PN-2001 (Transmissão)', 'PN-2002 (Eixo)', 'PN-2003 (Diferencial)'],
-    'Linha Agrícola': ['PN-3001 (Hidráulico)', 'PN-3002 (TDP)', 'PN-3003 (Implemento)'],
-    'Linha Utilitários': ['PN-4001 (Chassi)', 'PN-4002 (Elétrica)']
-  };
-  const reasonOptions = ['Garantia', 'Dúvida Técnica', 'Reclamação', 'Instalação', 'Peça Faltante', 'Avaria no Transporte'];
+  const [isCustomLocal, setIsCustomLocal] = useState(false);
 
+  const localOptions = [
+    'LINHA LEVES',
+    'LINHA PESADOS',
+    'SEQUENCIAMENTO 88',
+    'SEQUENCIAMENTO 89',
+    'SEQUENCIAMENTO 90',
+    'SEQUENCIAMENTO 81'
+  ];
+  
   useEffect(() => {
     if (task) {
       setFormData(task);
+      setIsCustomLocal(!localOptions.includes(task.line));
     } else {
       setFormData({
-        title: '',
+        title: `Atendimento ${new Date().toLocaleString('pt-BR')}`,
+        solicitante: '',
         category: 'Receptivo/Inbound',
-        line: '',
+        line: 'LINHA LEVES',
         pn: '',
         reason: '',
         description: '',
@@ -412,6 +454,7 @@ const TaskModal = ({ task, isOpen, onClose, onSave }: ModalProps) => {
         deadline: new Date().toISOString().slice(0, 16),
         status: 'A Fazer'
       });
+      setIsCustomLocal(false);
     }
   }, [task, isOpen]);
 
@@ -430,7 +473,7 @@ const TaskModal = ({ task, isOpen, onClose, onSave }: ModalProps) => {
             initial={{ opacity: 0, scale: 0.9, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.9, y: 20 }}
-            className="relative w-full max-w-2xl bg-white dark:bg-zinc-900 rounded-[2.5rem] shadow-2xl overflow-hidden border border-zinc-200 dark:border-zinc-800"
+            className="relative w-full max-w-md bg-white dark:bg-zinc-900 rounded-[2.5rem] shadow-2xl overflow-hidden border border-zinc-200 dark:border-zinc-800"
           >
             <div className="sticky top-0 z-10 flex items-center justify-between p-6 border-b border-zinc-100 dark:border-zinc-800 bg-white/80 dark:bg-zinc-900/80 backdrop-blur-md">
               <div className="flex items-center gap-3">
@@ -438,7 +481,7 @@ const TaskModal = ({ task, isOpen, onClose, onSave }: ModalProps) => {
                   <Plus size={20} />
                 </div>
                 <h2 className="text-lg font-black tracking-tight uppercase">
-                  {task ? 'Editar Registro' : 'Novo Atendimento'}
+                  {task ? 'Editar Registro' : 'Novo Registro'}
                 </h2>
               </div>
               <button onClick={onClose} className="p-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-full transition-colors">
@@ -446,110 +489,121 @@ const TaskModal = ({ task, isOpen, onClose, onSave }: ModalProps) => {
               </button>
             </div>
 
-            <div className="max-h-[calc(100vh-200px)] overflow-y-auto p-8 custom-scrollbar">
+            <div className="p-8 max-h-[70vh] overflow-y-auto custom-scrollbar">
               <form onSubmit={(e) => {
                 e.preventDefault();
-                onSave(formData as Task);
-              }} className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <div className="md:col-span-2">
-                  <label className="block text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500 mb-2">Atendimento / Contato</label>
+                const updatedTask = {
+                  ...formData,
+                  createdAt: new Date().toISOString().slice(0, 16)
+                };
+                onSave(updatedTask as Task);
+              }} className="space-y-6">
+                
+                <div>
+                  <label className="block text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500 mb-2">Solicitante</label>
                   <input 
+                    className="input-field"
                     required
-                    className="input-field text-base font-medium"
-                    value={formData.title}
-                    onChange={e => setFormData({...formData, title: e.target.value})}
-                    placeholder="Nome do cliente, empresa ou protocolo"
+                    value={formData.solicitante}
+                    onChange={e => setFormData({...formData, solicitante: e.target.value})}
+                    placeholder="Nome do solicitante"
                   />
                 </div>
 
-                <div className="space-y-6">
-                  <ComboBox 
-                    label="Linha de Produto"
-                    value={formData.line || ''}
-                    options={lineOptions}
-                    onChange={(val) => setFormData({...formData, line: val, pn: ''})}
-                    placeholder="Selecione ou digite a linha"
-                  />
-
-                  <ComboBox 
-                    label="Part Number (PN)"
-                    value={formData.pn || ''}
-                    options={formData.line ? (pnOptionsMap[formData.line] || []) : []}
-                    onChange={(val) => setFormData({...formData, pn: val})}
-                    placeholder="Selecione ou digite o PN"
-                  />
-
-                  <ComboBox 
-                    label="Motivo do Chamado"
-                    value={formData.reason || ''}
-                    options={reasonOptions}
-                    onChange={(val) => setFormData({...formData, reason: val})}
-                    placeholder="Qual o motivo do contato?"
-                  />
-                </div>
-
-                <div className="space-y-6">
-                  <div>
-                    <label className="block text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500 mb-2">Tipo de Interação</label>
+                <div>
+                  <label className="block text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500 mb-2">Local</label>
+                  <div className="space-y-2">
                     <select 
                       className="input-field appearance-none cursor-pointer"
-                      value={formData.category}
-                      onChange={e => setFormData({...formData, category: e.target.value as TaskCategory})}
+                      value={isCustomLocal ? 'Outro' : formData.line}
+                      onChange={e => {
+                        if (e.target.value === 'Outro') {
+                          setIsCustomLocal(true);
+                          setFormData({...formData, line: ''});
+                        } else {
+                          setIsCustomLocal(false);
+                          setFormData({...formData, line: e.target.value});
+                        }
+                      }}
                     >
-                      <option value="Receptivo/Inbound">Receptivo/Inbound</option>
-                      <option value="Ativo/Outbound">Ativo/Outbound</option>
-                      <option value="Acompanhamento/Follow-up">Acompanhamento/Follow-up</option>
-                      <option value="Processamento Back-office">Back-office</option>
+                      {localOptions.map(opt => (
+                        <option key={opt} value={opt}>{opt}</option>
+                      ))}
+                      <option value="Outro">Outro (Digitar manualmente)...</option>
                     </select>
-                  </div>
-
-                  <div>
-                    <label className="block text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500 mb-2">Status do Fluxo</label>
-                    <select 
-                      className="input-field appearance-none cursor-pointer"
-                      value={formData.status}
-                      onChange={e => setFormData({...formData, status: e.target.value as TaskStatus})}
-                    >
-                      <option value="A Fazer">A Fazer</option>
-                      <option value="Em Andamento">Em Andamento</option>
-                      <option value="Aguardando">Aguardando Resposta</option>
-                      <option value="Concluído">Concluído / Documentado</option>
-                    </select>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500 mb-2">Início</label>
-                      <input 
-                        type="datetime-local"
-                        className="input-field text-xs"
-                        value={formData.createdAt}
-                        onChange={e => setFormData({...formData, createdAt: e.target.value})}
+                    
+                    {isCustomLocal && (
+                      <motion.input 
+                        initial={{ opacity: 0, y: -5 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="input-field"
+                        placeholder="Digite o local manualmente"
+                        required
+                        value={formData.line}
+                        onChange={e => setFormData({...formData, line: e.target.value.toUpperCase()})}
                       />
-                    </div>
-                    <div>
-                      <label className="block text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500 mb-2">Prazo</label>
-                      <input 
-                        type="datetime-local"
-                        className="input-field text-xs"
-                        value={formData.deadline}
-                        onChange={e => setFormData({...formData, deadline: e.target.value})}
-                      />
-                    </div>
+                    )}
                   </div>
                 </div>
 
-                <div className="md:col-span-2">
-                  <label className="block text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500 mb-2">Observações / Detalhamento</label>
+                <div>
+                  <label className="block text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500 mb-2">Motivo</label>
+                  <input 
+                    className="input-field"
+                    required
+                    value={formData.reason}
+                    onChange={e => setFormData({...formData, reason: e.target.value})}
+                    placeholder="Motivo do chamado"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500 mb-2">PN</label>
+                  <input 
+                    className="input-field"
+                    value={formData.pn}
+                    onChange={e => setFormData({...formData, pn: e.target.value})}
+                    placeholder="Part Number"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500 mb-2">Ação</label>
                   <textarea 
-                    className="input-field min-h-[120px] resize-none"
+                    className="input-field min-h-[100px] py-3 resize-none"
                     value={formData.description}
                     onChange={e => setFormData({...formData, description: e.target.value})}
-                    placeholder="Descreva o que foi tratado..."
+                    placeholder="Descrição da ação realizada"
                   />
                 </div>
 
-                <div className="md:col-span-2 flex gap-4 pt-4 border-t border-zinc-100 dark:border-zinc-800">
+                <div>
+                  <label className="block text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500 mb-2">Status</label>
+                  <select 
+                    className="input-field appearance-none cursor-pointer"
+                    value={formData.status}
+                    onChange={e => setFormData({...formData, status: e.target.value as TaskStatus})}
+                  >
+                    <option value="A Fazer">A Fazer</option>
+                    <option value="Em Andamento">Em Andamento</option>
+                    <option value="Concluído">Concluído</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500 mb-2">
+                    {formData.status === 'Concluído' ? 'Data e Hora de Conclusão' : 'Data e Hora do Agendamento'}
+                  </label>
+                  <input 
+                    type="datetime-local"
+                    required
+                    className="input-field text-sm"
+                    value={formData.deadline}
+                    onChange={e => setFormData({...formData, deadline: e.target.value})}
+                  />
+                </div>
+
+                <div className="flex gap-4 pt-4 border-t border-zinc-100 dark:border-zinc-800">
                   <button 
                     type="button"
                     onClick={onClose}
@@ -561,7 +615,7 @@ const TaskModal = ({ task, isOpen, onClose, onSave }: ModalProps) => {
                     type="submit"
                     className="btn-primary flex-[2]"
                   >
-                    Finalizar Registro
+                    Salvar Registro
                   </button>
                 </div>
               </form>
@@ -576,17 +630,17 @@ const TaskModal = ({ task, isOpen, onClose, onSave }: ModalProps) => {
 // --- Main App ---
 
 export default function App() {
+  const { theme, toggleTheme } = useTheme();
   const [tasks, setTasks] = useState<Task[]>([]);
   const [search, setSearch] = useState('');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [filterStatus, setFilterStatus] = useState<TaskStatus | 'Todos'>('Todos');
-  const [filterLine, setFilterLine] = useState('Todas');
   const [viewMode, setViewMode] = useState<'kanban' | 'list'>('kanban');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [toast, setToast] = useState<{ message: string, type: 'success' | 'error' } | null>(null);
+  const [toast, setToast] = useState<{ message: string, type: 'success' | 'error' | 'warning' } | null>(null);
   const [draggedOverColumn, setDraggedOverColumn] = useState<TaskStatus | null>(null);
   const [upcomingDeadlines, setUpcomingDeadlines] = useState<Task[]>([]);
   const [showNotifications, setShowNotifications] = useState(false);
@@ -648,7 +702,7 @@ export default function App() {
       
       setToast({ 
         message, 
-        type: 'error' 
+        type: overdue.length > 0 ? 'error' : 'warning' 
       });
     }
   };
@@ -718,32 +772,32 @@ export default function App() {
     // Prepare data for SheetJS
     const data = all.map(t => ({
       'ID': t.id,
-      'Título': t.title,
-      'Descrição': t.description?.replace(/[\n\r]+/g, ' ').trim(),
-      'Status': t.status,
-      'Categoria': t.category,
-      'Linha': t.line,
-      'PN': t.pn,
+      'Registro': t.title,
+      'Solicitante': t.solicitante,
+      'Local': t.line,
       'Motivo': t.reason,
-      'Data de Criação': new Date(t.createdAt).toLocaleString('pt-BR'),
-      'Prazo': t.deadline ? new Date(t.deadline).toLocaleString('pt-BR') : ''
+      'PN': t.pn,
+      'Ação': t.description,
+      'Status': t.status,
+      'Interação': new Date(t.createdAt).toLocaleString('pt-BR'),
+      'Agendamento / Conclusão': new Date(t.deadline).toLocaleString('pt-BR')
     }));
 
     // Create worksheet
     const ws = utils.json_to_sheet(data);
     
-    // Set column widths for better "tabulation"
+    // Set column widths
     const wscols = [
       { wch: 5 },  // ID
-      { wch: 30 }, // Título
-      { wch: 50 }, // Descrição
-      { wch: 15 }, // Status
-      { wch: 15 }, // Categoria
-      { wch: 10 }, // Linha
-      { wch: 15 }, // PN
+      { wch: 30 }, // Registro
+      { wch: 20 }, // Solicitante
+      { wch: 20 }, // Local
       { wch: 20 }, // Motivo
-      { wch: 20 }, // Data Criação
-      { wch: 20 }, // Prazo
+      { wch: 15 }, // PN
+      { wch: 40 }, // Ação
+      { wch: 15 }, // Status
+      { wch: 20 }, // Interação
+      { wch: 25 }  // Agendamento / Conclusão
     ];
     ws['!cols'] = wscols;
 
@@ -803,22 +857,22 @@ export default function App() {
     if (!matchesSearch) return false;
 
     if (filterStatus !== 'Todos' && t.status !== filterStatus) return false;
-    if (filterLine !== 'Todas' && t.line !== filterLine) return false;
 
     if (startDate) {
-      const taskDate = new Date(t.createdAt).toISOString().split('T')[0];
+      const taskDate = new Date(t.deadline).toISOString().split('T')[0];
       if (taskDate < startDate) return false;
     }
 
     if (endDate) {
-      const taskDate = new Date(t.createdAt).toISOString().split('T')[0];
+      const taskDate = new Date(t.deadline).toISOString().split('T')[0];
       if (taskDate > endDate) return false;
     }
 
     return true;
   });
 
-  const columns: TaskStatus[] = ['A Fazer', 'Em Andamento', 'Aguardando', 'Concluído'];
+  const columns: TaskStatus[] = ['A Fazer', 'Em Andamento', 'Concluído'];
+  const hasOverdue = upcomingDeadlines.some(t => new Date(t.deadline) <= new Date());
 
   if (isLoading) {
     return (
@@ -860,12 +914,16 @@ export default function App() {
             <div className="relative notifications-container">
               <button 
                 onClick={() => setShowNotifications(!showNotifications)}
-                className={`p-2.5 rounded-xl transition-all relative ${upcomingDeadlines.length > 0 ? 'text-amber-500 bg-amber-50 dark:bg-amber-900/20 shadow-sm' : 'text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-800'}`}
+                className={`p-2.5 rounded-xl transition-all relative ${
+                  upcomingDeadlines.length > 0 
+                    ? (hasOverdue ? 'text-red-500 bg-red-50 dark:bg-red-900/20 shadow-sm' : 'text-amber-500 bg-amber-50 dark:bg-amber-900/20 shadow-sm')
+                    : 'text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-800'
+                }`}
                 title="Notificações de Prazo"
               >
                 <Bell size={20} />
                 {upcomingDeadlines.length > 0 && (
-                  <span className="absolute top-2 right-2 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white dark:border-zinc-900 animate-pulse" />
+                  <span className={`absolute top-2 right-2 w-2.5 h-2.5 rounded-full border-2 border-white dark:border-zinc-900 animate-pulse ${hasOverdue ? 'bg-red-500' : 'bg-amber-500'}`} />
                 )}
               </button>
 
@@ -888,7 +946,7 @@ export default function App() {
                       >
                         <div className="p-6 border-b border-zinc-100 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-800/50 flex justify-between items-center">
                           <div className="flex items-center gap-3">
-                            <div className="p-2 bg-amber-100 dark:bg-amber-900/30 text-amber-600 rounded-xl">
+                            <div className={`p-2 rounded-xl ${hasOverdue ? 'bg-red-100 dark:bg-red-900/30 text-red-600' : 'bg-amber-100 dark:bg-amber-900/30 text-amber-600'}`}>
                               <Bell size={20} />
                             </div>
                             <h3 className="text-xs font-black uppercase tracking-widest text-zinc-500">Notificações de Prazo</h3>
@@ -918,10 +976,15 @@ export default function App() {
                                 return (
                                   <div 
                                     key={task.id} 
-                                    className={`p-4 rounded-3xl transition-all border group ${
+                                    onClick={() => {
+                                      setEditingTask(task);
+                                      setIsModalOpen(true);
+                                      setShowNotifications(false);
+                                    }}
+                                    className={`p-4 rounded-3xl transition-all border group cursor-pointer ${
                                       isOverdue 
                                         ? 'bg-red-50/50 dark:bg-red-900/10 border-red-200/50 dark:border-red-800/50 hover:bg-red-100/50 dark:hover:bg-red-900/20' 
-                                        : 'bg-zinc-50 dark:bg-zinc-800/30 border-zinc-200/50 dark:border-zinc-700/50 hover:bg-zinc-100 dark:hover:bg-zinc-800/50'
+                                        : 'bg-amber-50/30 dark:bg-amber-900/5 border-amber-200/30 dark:border-amber-800/20 hover:bg-amber-100/30 dark:hover:bg-amber-900/10'
                                     }`}
                                   >
                                     <div className="flex justify-between items-start gap-3">
@@ -943,17 +1006,12 @@ export default function App() {
                                           </div>
                                         </div>
                                       </div>
-                                      <button 
-                                        onClick={() => {
-                                          setEditingTask(task);
-                                          setIsModalOpen(true);
-                                          setShowNotifications(false);
-                                        }}
+                                      <div 
                                         className="p-2 bg-white dark:bg-zinc-800 rounded-xl shadow-sm border border-zinc-200 dark:border-zinc-700 opacity-0 group-hover:opacity-100 transition-opacity"
                                         title="Ver Detalhes"
                                       >
                                         <LayoutDashboard size={16} className="text-emerald-600" />
-                                      </button>
+                                      </div>
                                     </div>
                                   </div>
                                 );
@@ -976,7 +1034,7 @@ export default function App() {
                 )}
               </AnimatePresence>
             </div>
-            <ThemeToggle />
+            <ThemeToggle theme={theme} onToggle={toggleTheme} />
             <div className="w-px h-6 bg-zinc-200 dark:bg-zinc-800 mx-1" />
             <button 
               onClick={() => { setEditingTask(null); setIsModalOpen(true); }}
@@ -1000,22 +1058,11 @@ export default function App() {
                 <option value="Todos">Status: Todos</option>
                 {columns.map(c => <option key={c} value={c}>{c}</option>)}
               </select>
-              <div className="w-px h-4 bg-zinc-200 dark:bg-zinc-800" />
-              <select 
-                className="bg-transparent border-none text-[10px] font-black uppercase outline-none cursor-pointer text-zinc-500 dark:text-zinc-400 tracking-widest px-2 py-1"
-                value={filterLine}
-                onChange={e => setFilterLine(e.target.value)}
-              >
-                <option value="Todas">Linha: Todas</option>
-                {['Linha Leves', 'Linha Pesados', 'Linha Agrícola', 'Linha Utilitários'].map(l => (
-                  <option key={l} value={l}>{l}</option>
-                ))}
-              </select>
             </div>
 
             <div className="flex items-center gap-2 bg-white dark:bg-zinc-900 p-1 rounded-xl border border-zinc-200/50 dark:border-zinc-800/50 shadow-sm">
               <div className="flex items-center gap-2 px-2">
-                <Clock size={12} className="text-zinc-400" />
+                <span className="text-[10px] font-black uppercase text-zinc-400 tracking-widest">Conclusão:</span>
                 <input 
                   type="date"
                   className="bg-transparent border-none text-[10px] font-bold uppercase outline-none cursor-pointer text-zinc-600 dark:text-zinc-300"
@@ -1032,9 +1079,9 @@ export default function App() {
                   onChange={e => setEndDate(e.target.value)}
                 />
               </div>
-              {(startDate || endDate || filterStatus !== 'Todos' || filterLine !== 'Todas') && (
+              {(startDate || endDate || filterStatus !== 'Todos') && (
                 <button 
-                  onClick={() => { setStartDate(''); setEndDate(''); setFilterStatus('Todos'); setFilterLine('Todas'); }}
+                  onClick={() => { setStartDate(''); setEndDate(''); setFilterStatus('Todos'); }}
                   className="p-1 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg text-red-500 transition-colors"
                 >
                   <X size={14} />
@@ -1118,7 +1165,6 @@ export default function App() {
                       <div className={`w-2 h-6 rounded-full ${
                         status === 'A Fazer' ? 'bg-zinc-400' :
                         status === 'Em Andamento' ? 'bg-blue-500' :
-                        status === 'Aguardando' ? 'bg-amber-500' :
                         'bg-emerald-500'
                       }`} />
                       <h2 className="text-xs font-black uppercase tracking-[0.2em] text-zinc-500 dark:text-zinc-400">{status}</h2>
@@ -1192,9 +1238,6 @@ export default function App() {
             <div className="w-2 h-2 rounded-full bg-red-500" />
             <span>Vencidos: {tasks.filter(t => t.status !== 'Concluído' && new Date(t.deadline) < new Date()).length}</span>
           </div>
-        </div>
-        <div>
-          <span>Local Storage: IndexedDB</span>
         </div>
       </footer>
 
