@@ -9,48 +9,53 @@
   --radius-2xl: 1.5rem;
   --radius-3xl: 2rem;
   
-  --shadow-soft: 0 2px 15px -3px rgba(0, 0, 0, 0.07), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-  --shadow-glow: 0 0 20px rgba(16, 185, 129, 0.2);
+  --shadow-soft: 0 2px 15px -3px rgba(0, 0, 0, 0.04), 0 4px 6px -2px rgba(0, 0, 0, 0.02);
+  --shadow-premium: 0 25px 50px -12px rgba(0, 0, 0, 0.08), 0 10px 20px -5px rgba(0, 0, 0, 0.03);
+  --shadow-glow: 0 0 20px rgba(16, 185, 129, 0.15);
 }
 
 @layer base {
   body {
-    @apply bg-zinc-50 text-zinc-900 transition-colors duration-300 dark:bg-[#09090b] dark:text-zinc-100 antialiased selection:bg-emerald-500/30;
+    @apply bg-[#fcfcfc] text-zinc-900 transition-colors duration-700 dark:bg-[#0a0a0c] dark:text-zinc-100 antialiased selection:bg-emerald-500/30;
   }
 }
 
 .kanban-column {
-  @apply flex flex-col gap-4 p-3 bg-zinc-100/40 dark:bg-zinc-900/40 rounded-3xl border border-zinc-200/50 dark:border-zinc-800/50 min-h-[500px] w-full transition-all duration-300;
+  @apply flex flex-col gap-5 p-5 bg-zinc-100/20 dark:bg-zinc-900/10 rounded-[2.5rem] border border-zinc-200/30 dark:border-zinc-800/30 min-h-[600px] w-full transition-all duration-700;
 }
 
 .task-card {
-  @apply bg-white dark:bg-zinc-900 p-4 rounded-2xl border border-zinc-200/60 dark:border-zinc-800/60 shadow-soft hover:shadow-xl hover:border-emerald-500/30 dark:hover:border-emerald-500/30 transition-all duration-300 cursor-grab active:cursor-grabbing;
+  @apply bg-white dark:bg-[#111113] p-6 rounded-[2rem] border border-zinc-200/40 dark:border-zinc-800/40 shadow-soft hover:shadow-premium hover:border-emerald-500/30 dark:hover:border-emerald-500/30 transition-all duration-700 cursor-grab active:cursor-grabbing;
 }
 
 .task-card-overdue {
-  @apply border-red-500/50 ring-1 ring-red-500/20 bg-red-50/30 dark:bg-red-950/10;
+  @apply border-red-500/20 ring-1 ring-red-500/5 bg-red-50/10 dark:bg-red-950/5;
 }
 
 .glass-panel {
-  @apply bg-white/70 dark:bg-zinc-950/70 backdrop-blur-xl border-b border-zinc-200/50 dark:border-zinc-800/50;
+  @apply bg-white/70 dark:bg-zinc-950/70 backdrop-blur-3xl border-b border-zinc-200/30 dark:border-zinc-800/30;
 }
 
 .input-field {
-  @apply w-full bg-zinc-100/50 dark:bg-zinc-800/50 border border-zinc-200/50 dark:border-zinc-700/50 rounded-xl p-3 text-sm focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 outline-none transition-all;
+  @apply w-full bg-zinc-100/30 dark:bg-zinc-900/30 border border-zinc-200/30 dark:border-zinc-800/30 rounded-2xl p-4 text-sm focus:ring-2 focus:ring-emerald-500/10 focus:border-emerald-500/40 outline-none transition-all duration-500 placeholder:text-zinc-400;
 }
 
 .btn-primary {
-  @apply px-6 py-3 bg-emerald-600 text-white rounded-xl font-bold text-xs uppercase tracking-widest hover:bg-emerald-500 active:scale-95 transition-all shadow-lg shadow-emerald-600/20;
+  @apply px-8 py-4 bg-emerald-600 dark:bg-emerald-500 text-white rounded-2xl font-bold text-[10px] uppercase tracking-[0.25em] hover:bg-emerald-700 dark:hover:bg-emerald-400 active:scale-95 transition-all duration-500 shadow-xl shadow-emerald-500/20 dark:shadow-emerald-500/10 border border-emerald-500/20 dark:border-emerald-400/20;
 }
 
 .btn-secondary {
-  @apply px-6 py-3 bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-xl font-bold text-xs uppercase tracking-widest hover:bg-zinc-200 dark:hover:bg-zinc-700 active:scale-95 transition-all;
+  @apply px-8 py-4 bg-white dark:bg-zinc-900 text-zinc-500 dark:text-zinc-400 rounded-2xl font-bold text-[10px] uppercase tracking-[0.25em] hover:bg-zinc-50 dark:hover:bg-zinc-800 active:scale-95 transition-all duration-500 border border-zinc-200/40 dark:border-zinc-800/40 shadow-soft;
+}
+
+.premium-label {
+  @apply text-[9px] font-black uppercase tracking-[0.3em] text-zinc-400 dark:text-zinc-600;
 }
 
 /* Custom Scrollbar */
 .custom-scrollbar::-webkit-scrollbar {
-  width: 5px;
-  height: 5px;
+  width: 4px;
+  height: 4px;
 }
 
 .custom-scrollbar::-webkit-scrollbar-track {
@@ -58,5 +63,10 @@
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb {
-  @apply bg-zinc-300 dark:bg-zinc-800 rounded-full hover:bg-zinc-400 dark:hover:bg-zinc-700 transition-colors;
+  @apply bg-zinc-200 dark:bg-zinc-800 rounded-full hover:bg-zinc-300 dark:hover:bg-zinc-700 transition-colors;
+}
+
+/* Animations */
+.hover-lift {
+  @apply transition-transform duration-500 hover:-translate-y-1;
 }

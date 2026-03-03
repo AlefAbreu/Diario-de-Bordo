@@ -28,26 +28,30 @@ import { Task, TaskStatus, TaskCategory } from './types';
 
 const Toast = ({ message, type = 'success', onClose }: { message: string, type?: 'success' | 'error' | 'warning', onClose: () => void }) => {
   useEffect(() => {
-    const timer = setTimeout(onClose, 3000);
+    const timer = setTimeout(onClose, 4000);
     return () => clearTimeout(timer);
   }, [onClose]);
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 50, scale: 0.9 }}
+      initial={{ opacity: 0, y: 20, scale: 0.95 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
-      exit={{ opacity: 0, scale: 0.9, transition: { duration: 0.2 } }}
-      className={`fixed bottom-6 right-6 z-[100] flex items-center gap-3 px-5 py-3 rounded-2xl shadow-2xl border backdrop-blur-md ${
+      exit={{ opacity: 0, scale: 0.95 }}
+      className={`fixed bottom-10 right-10 z-[100] flex items-center gap-5 px-8 py-5 rounded-[2.5rem] shadow-premium border backdrop-blur-3xl transition-all duration-700 ${
         type === 'success' 
-          ? 'bg-emerald-500/90 border-emerald-400 text-white' 
+          ? 'bg-zinc-900/95 dark:bg-white/95 border-zinc-800 dark:border-zinc-200 text-white dark:text-zinc-900' 
           : type === 'warning'
-          ? 'bg-amber-500/90 border-amber-400 text-white'
-          : 'bg-red-500/90 border-red-400 text-white'
+          ? 'bg-amber-500/95 border-amber-400 text-white'
+          : 'bg-red-500/95 border-red-400 text-white'
       }`}
     >
-      {type === 'success' ? <CheckCircle2 size={20} /> : <AlertCircle size={20} />}
-      <span className="text-sm font-bold tracking-tight">{message}</span>
-      <button onClick={onClose} className="ml-2 p-1 hover:bg-white/20 rounded-full transition-colors">
+      <div className={`p-2 rounded-full ${
+        type === 'success' ? 'bg-emerald-500/20 text-emerald-500' : 'bg-white/20 text-white'
+      }`}>
+        {type === 'success' ? <CheckCircle2 size={20} /> : <AlertCircle size={20} />}
+      </div>
+      <span className="text-[10px] font-black uppercase tracking-[0.2em]">{message}</span>
+      <button onClick={onClose} className="ml-4 p-1.5 hover:bg-black/10 dark:hover:bg-white/10 rounded-full transition-all">
         <X size={14} />
       </button>
     </motion.div>
@@ -207,9 +211,9 @@ const ListView: React.FC<{
   }
 
   return (
-    <div className="flex flex-col gap-2 pb-12 overflow-x-auto">
+    <div className="flex flex-col gap-3 pb-12 overflow-x-auto custom-scrollbar">
       <div className="min-w-[1100px]">
-        <div className="grid grid-cols-[1.2fr_1fr_1.5fr_130px_130px_100px_80px] gap-4 px-6 py-3 text-[10px] font-black uppercase tracking-widest text-zinc-400 border-b border-zinc-200 dark:border-zinc-800">
+        <div className="grid grid-cols-[1.2fr_1fr_1.5fr_130px_130px_100px_80px] gap-4 px-8 py-4 premium-label border-b border-zinc-200/50 dark:border-zinc-800/50">
           <div>Solicitante / Local</div>
           <div>Motivo / PN</div>
           <div>Ação Realizada</div>
@@ -227,53 +231,53 @@ const ListView: React.FC<{
                 layout
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.95 }}
+                exit={{ opacity: 0, scale: 0.98 }}
                 onDoubleClick={() => onEdit(task)}
-                className={`grid grid-cols-[1.2fr_1fr_1.5fr_130px_130px_100px_80px] gap-4 items-center px-6 py-3 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl hover:shadow-lg hover:shadow-zinc-200/50 dark:hover:shadow-none transition-all group cursor-pointer mt-2 ${isOverdue ? 'border-red-200 dark:border-red-900/30 bg-red-50/30 dark:bg-red-900/10' : ''}`}
+                className={`grid grid-cols-[1.2fr_1fr_1.5fr_130px_130px_100px_80px] gap-6 items-center px-10 py-6 bg-white dark:bg-[#111113] border border-zinc-200/40 dark:border-zinc-800/40 rounded-[2rem] hover:shadow-premium hover:border-emerald-500/30 transition-all duration-700 group cursor-pointer mt-4 ${isOverdue ? 'task-card-overdue' : ''}`}
               >
-                <div className="flex items-center gap-3 min-w-0">
-                  <div className={`w-1 h-6 rounded-full flex-shrink-0 ${isOverdue ? 'bg-red-500' : 'bg-emerald-500'}`} />
+                <div className="flex items-center gap-5 min-w-0">
+                  <div className={`w-1.5 h-10 rounded-full flex-shrink-0 transition-all duration-700 ${isOverdue ? 'bg-red-500/30 shadow-glow' : 'bg-emerald-500/30 shadow-glow'}`} />
                   <div className="truncate">
-                    <p className="text-sm font-bold truncate group-hover:text-emerald-600 transition-colors">{task.solicitante}</p>
-                    <p className="text-[10px] text-zinc-400 font-medium truncate">{task.line}</p>
+                    <p className="text-sm font-bold truncate group-hover:text-emerald-600 transition-colors duration-700">{task.solicitante}</p>
+                    <p className="premium-label truncate mt-1">{task.line}</p>
                   </div>
                 </div>
                 <div className="truncate">
-                  <p className="text-[11px] font-medium truncate">{task.reason}</p>
-                  <p className="text-[10px] text-zinc-400 font-mono truncate">{task.pn || '-'}</p>
+                  <p className="text-[11px] font-bold truncate text-zinc-700 dark:text-zinc-200">{task.reason}</p>
+                  <p className="text-[10px] text-zinc-400 font-mono tracking-tighter truncate mt-0.5">{task.pn || '-'}</p>
                 </div>
                 <div className="truncate">
-                  <p className="text-[11px] text-zinc-500 line-clamp-2 leading-tight">{task.description || '-'}</p>
+                  <p className="text-[11px] text-zinc-500 dark:text-zinc-400 line-clamp-2 leading-relaxed font-medium">{task.description || '-'}</p>
                 </div>
-                <div className="text-[10px] font-medium text-zinc-500 leading-tight">
+                <div className="text-[10px] font-bold text-zinc-400 tracking-tight leading-tight">
                   {new Date(task.createdAt).toLocaleString('pt-BR').split(' ').map((p, i) => (
                     <div key={i}>{p}</div>
                   ))}
                 </div>
-                <div className={`text-[10px] font-bold leading-tight ${isOverdue ? 'text-red-500' : 'text-emerald-600'}`}>
+                <div className={`text-[10px] font-black leading-tight tracking-tight ${isOverdue ? 'text-red-500/80' : 'text-emerald-600/80'}`}>
                   {new Date(task.deadline).toLocaleString('pt-BR').split(' ').map((p, i) => (
                     <div key={i}>{p}</div>
                   ))}
                 </div>
                 <div>
-                  <span className={`text-[9px] font-black uppercase tracking-tighter px-2 py-1 rounded-full ${
-                    task.status === 'A Fazer' ? 'bg-zinc-100 text-zinc-500 dark:bg-zinc-800' :
-                    task.status === 'Em Andamento' ? 'bg-blue-100 text-blue-600 dark:bg-blue-900/30' :
-                    'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30'
+                  <span className={`text-[9px] font-black uppercase tracking-[0.2em] px-4 py-1.5 rounded-full border transition-all duration-700 ${
+                    task.status === 'A Fazer' ? 'bg-zinc-50 text-zinc-400 border-zinc-200/50 dark:bg-zinc-900/50 dark:border-zinc-800/50' :
+                    task.status === 'Em Andamento' ? 'bg-blue-500/5 text-blue-500 border-blue-500/20 dark:bg-blue-900/10 dark:border-blue-800/20' :
+                    'bg-emerald-500/5 text-emerald-600 border-emerald-500/20 dark:bg-emerald-900/10 dark:border-emerald-800/20'
                   }`}>
                     {task.status}
                   </span>
                 </div>
-                <div className="flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-all duration-700 transform translate-x-4 group-hover:translate-x-0">
                   <button 
                     onClick={() => onEdit(task)}
-                    className="p-1.5 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 text-emerald-600 rounded-lg transition-colors"
+                    className="p-3 bg-zinc-50 dark:bg-zinc-900 hover:bg-white dark:hover:bg-zinc-800 text-zinc-400 hover:text-emerald-600 rounded-2xl shadow-soft border border-transparent hover:border-zinc-200/50 dark:hover:border-zinc-800/50 transition-all"
                   >
                     <Pencil size={14} />
                   </button>
                   <button 
                     onClick={() => onDelete(task.id!)}
-                    className="p-1.5 hover:bg-red-50 dark:hover:bg-red-900/30 text-red-500 rounded-lg transition-colors"
+                    className="p-3 bg-zinc-50 dark:bg-zinc-900 hover:bg-white dark:hover:bg-zinc-800 text-zinc-400 hover:text-red-500 rounded-2xl shadow-soft border border-transparent hover:border-zinc-200/50 dark:hover:border-zinc-800/50 transition-all"
                   >
                     <Trash2 size={14} />
                   </button>
@@ -307,101 +311,90 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, onEdit, onDelete, onDragStart
     try {
       await navigator.clipboard.writeText(text);
       setShowToast(true);
+      setTimeout(() => setShowToast(false), 2000);
     } catch (err) {
       console.error('Falha ao copiar', err);
     }
   };
 
   return (
-    <>
-      <motion.div
-        layout
-        draggable
-        onDragStart={(e) => onDragStart(e, task.id!)}
-        onDoubleClick={() => onEdit(task)}
-        whileHover={{ y: -2, scale: 1.01 }}
-        className={`task-card group relative overflow-hidden cursor-pointer p-3 ${isOverdue ? 'task-card-overdue' : ''}`}
-      >
-        <div className={`absolute top-0 left-0 w-1 h-full ${isOverdue ? 'bg-red-500' : 'bg-emerald-500'}`} />
-
-        <div className="flex justify-between items-start mb-2">
-          <div className="flex flex-wrap gap-1">
-            <span className={`text-[8px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded-md ${
-              isOverdue ? 'bg-red-50 text-red-600 dark:bg-red-900/20 dark:text-red-400' : 'bg-emerald-50 text-emerald-600 dark:bg-emerald-900/20 dark:text-emerald-400'
-            }`}>
-              {isOverdue ? 'Vencido' : 'Em Dia'}
-            </span>
+    <motion.div
+      layout
+      initial={{ opacity: 0, scale: 0.98 }}
+      animate={{ opacity: 1, scale: 1 }}
+      exit={{ opacity: 0, scale: 0.98 }}
+      draggable
+      onDragStart={(e) => onDragStart(e, task.id!)}
+      onDoubleClick={() => onEdit(task)}
+      className={`task-card group relative hover-lift ${isOverdue ? 'task-card-overdue' : ''}`}
+    >
+      <div className="flex justify-between items-start mb-4">
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 mb-1">
+            <span className="premium-label truncate">{task.line}</span>
+            <div className={`w-1.5 h-1.5 rounded-full ${isOverdue ? 'bg-red-500 animate-pulse' : 'bg-emerald-500'}`} />
           </div>
-          <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-            <button 
-              onClick={(e) => { e.stopPropagation(); onEdit(task); }}
-              className="p-1 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 text-emerald-600 rounded-md transition-colors"
-              title="Editar"
-            >
-              <Pencil size={12} />
-            </button>
-            <button 
-              onClick={(e) => { e.stopPropagation(); onDelete(task.id!); }}
-              className="p-1 hover:bg-red-50 dark:hover:bg-red-900/30 text-red-500 rounded-md transition-colors"
-              title="Excluir"
-            >
-              <Trash2 size={12} />
-            </button>
-          </div>
+          <h3 className="text-sm font-bold text-zinc-800 dark:text-zinc-100 truncate group-hover:text-emerald-600 transition-colors duration-500">
+            {task.solicitante}
+          </h3>
         </div>
-
-        <h3 className="text-xs font-bold leading-tight mb-1 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors line-clamp-1">
-          {task.solicitante}
-        </h3>
-        <p className="text-[10px] font-medium text-zinc-400 mb-2 truncate">{task.line}</p>
-
-        <div className="space-y-1.5 mb-2">
-          <div className="flex items-center gap-2 text-zinc-500">
-            <Clock size={10} className="shrink-0" />
-            <div className="flex flex-col">
-              <span className="text-[8px] uppercase tracking-tighter text-zinc-400 font-black">Interação:</span>
-              <span className="text-[9px] font-medium">
-                {new Date(task.createdAt).toLocaleString('pt-BR')}
-              </span>
-            </div>
-          </div>
-          <div className="flex items-center gap-2 text-zinc-500">
-            <CheckCircle2 size={10} className="shrink-0" />
-            <div className="flex flex-col">
-              <span className="text-[8px] uppercase tracking-tighter text-zinc-400 font-black">
-                {task.status === 'Concluído' ? 'Conclusão:' : 'Agendamento:'}
-              </span>
-              <span className={`text-[9px] font-bold ${isOverdue ? 'text-red-500' : 'text-emerald-600'}`}>
-                {new Date(task.deadline).toLocaleString('pt-BR')}
-              </span>
-            </div>
-          </div>
-        </div>
-
-        <div className="flex items-center justify-between pt-2 border-t border-zinc-100 dark:border-zinc-800">
-          <div className="flex items-center gap-1">
-            <div className={`w-1 h-1 rounded-full animate-pulse ${isOverdue ? 'bg-red-500' : 'bg-emerald-500'}`} />
-            <span className="text-[8px] font-bold text-zinc-400 uppercase tracking-tighter">
-              {task.status}
-            </span>
-          </div>
+        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all duration-500 translate-x-2 group-hover:translate-x-0">
           <button 
-            onClick={(e) => { e.stopPropagation(); copyToClipboard(e); }}
-            className="text-[10px] font-black text-emerald-600 hover:text-emerald-500 uppercase tracking-widest flex items-center gap-1"
+            onClick={copyToClipboard}
+            className="p-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-400 hover:text-emerald-600 rounded-xl transition-all"
+            title="Copiar Detalhes"
           >
-            Copiar
+            <ClipboardCheck size={14} />
+          </button>
+          <button 
+            onClick={(e) => { e.stopPropagation(); onEdit(task); }}
+            className="p-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-400 hover:text-emerald-600 rounded-xl transition-all"
+          >
+            <Pencil size={14} />
           </button>
         </div>
-      </motion.div>
+      </div>
+
+      <div className="space-y-3">
+        <div className="p-3 bg-zinc-50/50 dark:bg-zinc-900/50 rounded-xl border border-zinc-200/30 dark:border-zinc-800/30">
+          <p className="text-[11px] font-medium text-zinc-600 dark:text-zinc-300 line-clamp-2 leading-relaxed">
+            {task.reason}
+          </p>
+          <p className="text-[10px] text-zinc-400 font-mono mt-1 tracking-tighter">
+            PN: {task.pn || '-'}
+          </p>
+        </div>
+
+        <div className="flex items-center justify-between pt-2 border-t border-zinc-100 dark:border-zinc-800/50">
+          <div className="flex items-center gap-1.5 text-zinc-400">
+            <Clock size={12} />
+            <span className={`text-[10px] font-bold tracking-tight ${isOverdue ? 'text-red-500/80' : 'text-zinc-500'}`}>
+              {new Date(task.deadline).toLocaleDateString('pt-BR')}
+            </span>
+          </div>
+          <span className={`text-[9px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full border ${
+            task.status === 'A Fazer' ? 'bg-zinc-50 text-zinc-400 border-zinc-200/50 dark:bg-zinc-900/50 dark:border-zinc-800/50' :
+            task.status === 'Em Andamento' ? 'bg-blue-50/50 text-blue-500 border-blue-200/30 dark:bg-blue-900/10 dark:border-blue-800/20' :
+            'bg-emerald-50/50 text-emerald-600 border-emerald-200/30 dark:bg-emerald-900/10 dark:border-emerald-800/20'
+          }`}>
+            {task.status}
+          </span>
+        </div>
+      </div>
+
       <AnimatePresence>
         {showToast && (
-          <Toast 
-            message="Copiado para a área de transferência!" 
-            onClose={() => setShowToast(false)} 
-          />
+          <motion.div
+            initial={{ opacity: 0, y: 10, scale: 0.9 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.9 }}
+            className="absolute inset-x-4 bottom-4 bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 py-2 px-4 rounded-xl text-[10px] font-bold uppercase tracking-widest text-center shadow-xl z-10"
+          >
+            Copiado com sucesso!
+          </motion.div>
         )}
       </AnimatePresence>
-    </>
+    </motion.div>
   );
 };
 
@@ -470,21 +463,24 @@ const TaskModal = ({ task, isOpen, onClose, onSave }: ModalProps) => {
             className="absolute inset-0 bg-zinc-950/60 backdrop-blur-sm"
           />
           <motion.div 
-            initial={{ opacity: 0, scale: 0.9, y: 20 }}
+            initial={{ opacity: 0, scale: 0.95, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.9, y: 20 }}
-            className="relative w-full max-w-md bg-white dark:bg-zinc-900 rounded-[2.5rem] shadow-2xl overflow-hidden border border-zinc-200 dark:border-zinc-800"
+            exit={{ opacity: 0, scale: 0.95, y: 20 }}
+            className="relative w-full max-w-md bg-white dark:bg-[#0c0c0e] rounded-[2.5rem] shadow-2xl overflow-hidden border border-zinc-200/50 dark:border-zinc-800/50"
           >
-            <div className="sticky top-0 z-10 flex items-center justify-between p-6 border-b border-zinc-100 dark:border-zinc-800 bg-white/80 dark:bg-zinc-900/80 backdrop-blur-md">
-              <div className="flex items-center gap-3">
-                <div className="bg-emerald-600 p-2 rounded-xl text-white shadow-lg shadow-emerald-600/20">
+            <div className="sticky top-0 z-10 flex items-center justify-between p-8 border-b border-zinc-100 dark:border-zinc-800/50 bg-white/80 dark:bg-[#0c0c0e]/80 backdrop-blur-xl">
+              <div className="flex items-center gap-4">
+                <div className="bg-zinc-900 dark:bg-white p-2.5 rounded-2xl text-white dark:text-zinc-900 shadow-lg shadow-black/5 dark:shadow-white/5">
                   <Plus size={20} />
                 </div>
-                <h2 className="text-lg font-black tracking-tight uppercase">
-                  {task ? 'Editar Registro' : 'Novo Registro'}
-                </h2>
+                <div>
+                  <h2 className="text-lg font-bold tracking-tight text-zinc-900 dark:text-white">
+                    {task ? 'Editar Registro' : 'Novo Registro'}
+                  </h2>
+                  <p className="premium-label">Preencha os detalhes abaixo</p>
+                </div>
               </div>
-              <button onClick={onClose} className="p-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-full transition-colors">
+              <button onClick={onClose} className="p-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-full transition-all text-zinc-400 hover:text-zinc-600">
                 <X size={20} />
               </button>
             </div>
@@ -494,13 +490,13 @@ const TaskModal = ({ task, isOpen, onClose, onSave }: ModalProps) => {
                 e.preventDefault();
                 const updatedTask = {
                   ...formData,
-                  createdAt: new Date().toISOString().slice(0, 16)
+                  createdAt: task ? formData.createdAt : new Date().toISOString().slice(0, 16)
                 };
                 onSave(updatedTask as Task);
-              }} className="space-y-6">
+              }} className="space-y-8">
                 
-                <div>
-                  <label className="block text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500 mb-2">Solicitante</label>
+                <div className="space-y-2">
+                  <label className="premium-label block ml-1">Solicitante</label>
                   <input 
                     className="input-field"
                     required
@@ -510,31 +506,36 @@ const TaskModal = ({ task, isOpen, onClose, onSave }: ModalProps) => {
                   />
                 </div>
 
-                <div>
-                  <label className="block text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500 mb-2">Local</label>
-                  <div className="space-y-2">
-                    <select 
-                      className="input-field appearance-none cursor-pointer"
-                      value={isCustomLocal ? 'Outro' : formData.line}
-                      onChange={e => {
-                        if (e.target.value === 'Outro') {
-                          setIsCustomLocal(true);
-                          setFormData({...formData, line: ''});
-                        } else {
-                          setIsCustomLocal(false);
-                          setFormData({...formData, line: e.target.value});
-                        }
-                      }}
-                    >
-                      {localOptions.map(opt => (
-                        <option key={opt} value={opt}>{opt}</option>
-                      ))}
-                      <option value="Outro">Outro (Digitar manualmente)...</option>
-                    </select>
+                <div className="space-y-2">
+                  <label className="premium-label block ml-1">Local</label>
+                  <div className="space-y-3">
+                    <div className="relative">
+                      <select 
+                        className="input-field appearance-none cursor-pointer pr-10"
+                        value={isCustomLocal ? 'Outro' : formData.line}
+                        onChange={e => {
+                          if (e.target.value === 'Outro') {
+                            setIsCustomLocal(true);
+                            setFormData({...formData, line: ''});
+                          } else {
+                            setIsCustomLocal(false);
+                            setFormData({...formData, line: e.target.value});
+                          }
+                        }}
+                      >
+                        {localOptions.map(opt => (
+                          <option key={opt} value={opt}>{opt}</option>
+                        ))}
+                        <option value="Outro">Outro (Digitar manualmente)...</option>
+                      </select>
+                      <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-zinc-400">
+                        <MoreVertical size={14} />
+                      </div>
+                    </div>
                     
                     {isCustomLocal && (
                       <motion.input 
-                        initial={{ opacity: 0, y: -5 }}
+                        initial={{ opacity: 0, y: -10 }}
                         animate={{ opacity: 1, y: 0 }}
                         className="input-field"
                         placeholder="Digite o local manualmente"
@@ -546,64 +547,70 @@ const TaskModal = ({ task, isOpen, onClose, onSave }: ModalProps) => {
                   </div>
                 </div>
 
-                <div>
-                  <label className="block text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500 mb-2">Motivo</label>
-                  <input 
-                    className="input-field"
-                    required
-                    value={formData.reason}
-                    onChange={e => setFormData({...formData, reason: e.target.value})}
-                    placeholder="Motivo do chamado"
-                  />
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <label className="premium-label block ml-1">Motivo</label>
+                    <input 
+                      className="input-field"
+                      required
+                      value={formData.reason}
+                      onChange={e => setFormData({...formData, reason: e.target.value})}
+                      placeholder="Motivo"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="premium-label block ml-1">PN</label>
+                    <input 
+                      className="input-field"
+                      value={formData.pn}
+                      onChange={e => setFormData({...formData, pn: e.target.value})}
+                      placeholder="Part Number"
+                    />
+                  </div>
                 </div>
 
-                <div>
-                  <label className="block text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500 mb-2">PN</label>
-                  <input 
-                    className="input-field"
-                    value={formData.pn}
-                    onChange={e => setFormData({...formData, pn: e.target.value})}
-                    placeholder="Part Number"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500 mb-2">Ação</label>
+                <div className="space-y-2">
+                  <label className="premium-label block ml-1">Ação Realizada</label>
                   <textarea 
-                    className="input-field min-h-[100px] py-3 resize-none"
+                    className="input-field min-h-[120px] py-4 resize-none leading-relaxed"
                     value={formData.description}
                     onChange={e => setFormData({...formData, description: e.target.value})}
-                    placeholder="Descrição da ação realizada"
+                    placeholder="Descreva a ação detalhadamente..."
                   />
                 </div>
 
-                <div>
-                  <label className="block text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500 mb-2">Status</label>
-                  <select 
-                    className="input-field appearance-none cursor-pointer"
-                    value={formData.status}
-                    onChange={e => setFormData({...formData, status: e.target.value as TaskStatus})}
-                  >
-                    <option value="A Fazer">A Fazer</option>
-                    <option value="Em Andamento">Em Andamento</option>
-                    <option value="Concluído">Concluído</option>
-                  </select>
+                <div className="space-y-2">
+                  <label className="premium-label block ml-1">Status</label>
+                  <div className="relative">
+                    <select 
+                      className="input-field appearance-none cursor-pointer pr-10"
+                      value={formData.status}
+                      onChange={e => setFormData({...formData, status: e.target.value as TaskStatus})}
+                    >
+                      <option value="A Fazer">A Fazer</option>
+                      <option value="Em Andamento">Em Andamento</option>
+                      <option value="Concluído">Concluído</option>
+                    </select>
+                    <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-zinc-400">
+                      <MoreVertical size={14} />
+                    </div>
+                  </div>
                 </div>
 
-                <div>
-                  <label className="block text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500 mb-2">
+                <div className="space-y-2">
+                  <label className="premium-label block ml-1">
                     {formData.status === 'Concluído' ? 'Data e Hora de Conclusão' : 'Data e Hora do Agendamento'}
                   </label>
                   <input 
                     type="datetime-local"
                     required
-                    className="input-field text-sm"
+                    className="input-field"
                     value={formData.deadline}
                     onChange={e => setFormData({...formData, deadline: e.target.value})}
                   />
                 </div>
 
-                <div className="flex gap-4 pt-4 border-t border-zinc-100 dark:border-zinc-800">
+                <div className="pt-4 flex gap-3">
                   <button 
                     type="button"
                     onClick={onClose}
@@ -613,9 +620,9 @@ const TaskModal = ({ task, isOpen, onClose, onSave }: ModalProps) => {
                   </button>
                   <button 
                     type="submit"
-                    className="btn-primary flex-[2]"
+                    className="btn-primary flex-1"
                   >
-                    Salvar Registro
+                    {task ? 'Salvar Alterações' : 'Criar Registro'}
                   </button>
                 </div>
               </form>
@@ -643,6 +650,7 @@ export default function App() {
   const [toast, setToast] = useState<{ message: string, type: 'success' | 'error' | 'warning' } | null>(null);
   const [draggedOverColumn, setDraggedOverColumn] = useState<TaskStatus | null>(null);
   const [upcomingDeadlines, setUpcomingDeadlines] = useState<Task[]>([]);
+  const [summaryMode, setSummaryMode] = useState<'daily' | 'consolidated'>('consolidated');
   const [showNotifications, setShowNotifications] = useState(false);
 
   useEffect(() => {
@@ -889,12 +897,12 @@ export default function App() {
         {/* Top Bar: Logo, Search, Primary Actions */}
         <div className="px-6 py-3 flex flex-col md:flex-row items-center justify-between gap-4 border-b border-zinc-100 dark:border-zinc-800/50">
           <div className="flex items-center gap-4 shrink-0">
-            <div className="bg-emerald-600 p-2 rounded-xl text-white shadow-lg shadow-emerald-600/20 rotate-3 hover:rotate-0 transition-transform duration-500">
-              <LayoutDashboard size={24} strokeWidth={2.5} />
+            <div className="bg-emerald-600 p-2.5 rounded-2xl text-white shadow-xl shadow-emerald-500/20 rotate-6 hover:rotate-0 transition-all duration-700 border border-emerald-400/20">
+              <LayoutDashboard size={22} strokeWidth={2.5} />
             </div>
             <div>
-              <h1 className="text-lg font-black tracking-tight leading-none bg-gradient-to-br from-zinc-900 to-zinc-600 dark:from-white dark:to-zinc-400 bg-clip-text text-transparent">DIÁRIO DE BORDO</h1>
-              <p className="text-[9px] uppercase tracking-[0.2em] text-zinc-500 font-bold mt-0.5">Gestão Local</p>
+              <h1 className="text-xl font-black tracking-tighter leading-none bg-gradient-to-br from-zinc-900 via-zinc-800 to-zinc-600 dark:from-white dark:via-zinc-100 dark:to-zinc-500 bg-clip-text text-transparent">DIÁRIO DE BORDO</h1>
+              <p className="premium-label mt-1">Gestão de Operações</p>
             </div>
           </div>
 
@@ -939,38 +947,41 @@ export default function App() {
                     />
                     <div className="fixed inset-0 flex items-center justify-center pointer-events-none z-[101] p-4">
                       <motion.div 
-                        initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                        initial={{ opacity: 0, scale: 0.95, y: 20 }}
                         animate={{ opacity: 1, scale: 1, y: 0 }}
-                        exit={{ opacity: 0, scale: 0.9, y: 20 }}
-                        className="w-full max-w-md bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-[2.5rem] shadow-[0_32px_64px_-12px_rgba(0,0,0,0.3)] overflow-hidden pointer-events-auto"
+                        exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                        className="w-full max-w-md bg-white dark:bg-[#0c0c0e] border border-zinc-200/50 dark:border-zinc-800/50 rounded-[2.5rem] shadow-premium overflow-hidden pointer-events-auto"
                       >
-                        <div className="p-6 border-b border-zinc-100 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-800/50 flex justify-between items-center">
-                          <div className="flex items-center gap-3">
-                            <div className={`p-2 rounded-xl ${hasOverdue ? 'bg-red-100 dark:bg-red-900/30 text-red-600' : 'bg-amber-100 dark:bg-amber-900/30 text-amber-600'}`}>
+                        <div className="p-8 border-b border-zinc-100 dark:border-zinc-800/50 bg-zinc-50/50 dark:bg-zinc-900/30 flex justify-between items-center">
+                          <div className="flex items-center gap-4">
+                            <div className={`p-2.5 rounded-2xl ${hasOverdue ? 'bg-red-500/10 text-red-500' : 'bg-amber-500/10 text-amber-500'}`}>
                               <Bell size={20} />
                             </div>
-                            <h3 className="text-xs font-black uppercase tracking-widest text-zinc-500">Notificações de Prazo</h3>
+                            <div>
+                              <h3 className="text-sm font-bold text-zinc-900 dark:text-white">Notificações</h3>
+                              <p className="premium-label">Acompanhe seus prazos</p>
+                            </div>
                           </div>
                           <button 
                             onClick={() => setShowNotifications(false)}
-                            className="p-2 hover:bg-zinc-200 dark:hover:bg-zinc-800 rounded-full text-zinc-400 transition-colors"
+                            className="p-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-full text-zinc-400 transition-all"
                           >
                             <X size={20} />
                           </button>
                         </div>
                         
-                        <div className="max-h-[60vh] overflow-y-auto p-4 custom-scrollbar">
+                        <div className="max-h-[60vh] overflow-y-auto p-6 custom-scrollbar">
                           {upcomingDeadlines.length === 0 ? (
-                            <div className="py-12 text-center">
-                              <div className="w-16 h-16 bg-zinc-100 dark:bg-zinc-800 rounded-full flex items-center justify-center mx-auto mb-4">
-                                <Bell size={28} className="text-zinc-300" />
+                            <div className="py-16 text-center">
+                              <div className="w-20 h-20 bg-zinc-50 dark:bg-zinc-900 rounded-full flex items-center justify-center mx-auto mb-6 border border-zinc-100 dark:border-zinc-800/50">
+                                <Bell size={32} className="text-zinc-200 dark:text-zinc-800" />
                               </div>
-                              <p className="text-zinc-500 text-sm font-medium">Nenhum prazo crítico ou vencido.</p>
-                              <p className="text-zinc-400 text-xs mt-1">Bom trabalho! Suas tarefas estão em dia.</p>
+                              <p className="text-zinc-900 dark:text-white text-sm font-bold">Tudo em dia!</p>
+                              <p className="text-zinc-400 text-xs mt-2">Nenhum prazo crítico no momento.</p>
                             </div>
                           ) : (
-                            <div className="space-y-3">
-                              <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest px-2 mb-2">Prazos Críticos e Vencidos</p>
+                            <div className="space-y-4">
+                              <p className="premium-label px-2">Críticos e Vencidos</p>
                               {upcomingDeadlines.map(task => {
                                 const isOverdue = new Date(task.deadline) <= new Date();
                                 return (
@@ -981,36 +992,36 @@ export default function App() {
                                       setIsModalOpen(true);
                                       setShowNotifications(false);
                                     }}
-                                    className={`p-4 rounded-3xl transition-all border group cursor-pointer ${
+                                    className={`p-5 rounded-[2rem] transition-all border group cursor-pointer hover-lift ${
                                       isOverdue 
-                                        ? 'bg-red-50/50 dark:bg-red-900/10 border-red-200/50 dark:border-red-800/50 hover:bg-red-100/50 dark:hover:bg-red-900/20' 
-                                        : 'bg-amber-50/30 dark:bg-amber-900/5 border-amber-200/30 dark:border-amber-800/20 hover:bg-amber-100/30 dark:hover:bg-amber-900/10'
+                                        ? 'bg-red-50/30 dark:bg-red-900/5 border-red-200/30 dark:border-red-800/20' 
+                                        : 'bg-amber-50/20 dark:bg-amber-900/5 border-amber-200/20 dark:border-amber-800/10'
                                     }`}
                                   >
-                                    <div className="flex justify-between items-start gap-3">
-                                      <div className="flex-1">
-                                        <p className="text-sm font-bold group-hover:text-emerald-600 transition-colors">{task.title}</p>
-                                        <div className="flex items-center gap-2 mt-2">
-                                          <span className={`text-[10px] font-black px-2 py-0.5 rounded-full uppercase tracking-tighter ${
+                                    <div className="flex justify-between items-start gap-4">
+                                      <div className="flex-1 min-w-0">
+                                        <p className="text-sm font-bold text-zinc-800 dark:text-zinc-100 truncate group-hover:text-emerald-600 transition-colors">
+                                          {task.solicitante}
+                                        </p>
+                                        <p className="text-[10px] text-zinc-400 mt-1 truncate">{task.line}</p>
+                                        <div className="flex items-center gap-3 mt-4">
+                                          <span className={`text-[9px] font-bold px-2.5 py-0.5 rounded-full uppercase tracking-widest border ${
                                             isOverdue 
-                                              ? 'text-red-600 bg-red-100 dark:bg-red-900/30' 
-                                              : 'text-amber-600 bg-amber-100 dark:bg-amber-900/30'
+                                              ? 'text-red-500 border-red-200/30 bg-red-500/5' 
+                                              : 'text-amber-500 border-amber-200/30 bg-amber-500/5'
                                           }`}>
                                             {isOverdue ? 'Vencido' : 'Próximo'}
                                           </span>
-                                          <div className="flex items-center gap-1.5 text-zinc-500">
+                                          <div className="flex items-center gap-1.5 text-zinc-400">
                                             <Clock size={12} />
-                                            <p className="text-[11px] font-medium">
+                                            <p className="text-[10px] font-bold tracking-tight">
                                               {new Date(task.deadline).toLocaleString('pt-BR')}
                                             </p>
                                           </div>
                                         </div>
                                       </div>
-                                      <div 
-                                        className="p-2 bg-white dark:bg-zinc-800 rounded-xl shadow-sm border border-zinc-200 dark:border-zinc-700 opacity-0 group-hover:opacity-100 transition-opacity"
-                                        title="Ver Detalhes"
-                                      >
-                                        <LayoutDashboard size={16} className="text-emerald-600" />
+                                      <div className="p-2.5 bg-white dark:bg-zinc-900 rounded-2xl shadow-soft border border-zinc-100 dark:border-zinc-800 opacity-0 group-hover:opacity-100 transition-all translate-x-2 group-hover:translate-x-0">
+                                        <Pencil size={14} className="text-emerald-600" />
                                       </div>
                                     </div>
                                   </div>
@@ -1020,10 +1031,10 @@ export default function App() {
                           )}
                         </div>
                         
-                        <div className="p-4 bg-zinc-50/50 dark:bg-zinc-800/50 border-t border-zinc-100 dark:border-zinc-800 text-center">
+                        <div className="p-6 bg-zinc-50/50 dark:bg-zinc-900/30 border-t border-zinc-100 dark:border-zinc-800/50 text-center">
                           <button 
                             onClick={() => setShowNotifications(false)}
-                            className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 transition-colors"
+                            className="premium-label hover:text-zinc-900 dark:hover:text-white transition-colors"
                           >
                             Fechar Notificações
                           </button>
@@ -1035,10 +1046,10 @@ export default function App() {
               </AnimatePresence>
             </div>
             <ThemeToggle theme={theme} onToggle={toggleTheme} />
-            <div className="w-px h-6 bg-zinc-200 dark:bg-zinc-800 mx-1" />
+            <div className="w-px h-6 bg-zinc-200 dark:bg-zinc-800 mx-2" />
             <button 
               onClick={() => { setEditingTask(null); setIsModalOpen(true); }}
-              className="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-600/20 font-bold text-[10px] uppercase tracking-widest active:scale-95"
+              className="btn-primary flex items-center gap-2"
             >
               <Plus size={16} />
               <span>Novo</span>
@@ -1047,11 +1058,11 @@ export default function App() {
         </div>
 
         {/* Sub Header: Filters & View Toggles */}
-        <div className="px-6 py-2 flex flex-wrap items-center justify-between gap-4 bg-zinc-50/50 dark:bg-zinc-900/30">
-          <div className="flex flex-wrap items-center gap-3">
-            <div className="flex items-center gap-2 bg-white dark:bg-zinc-900 p-1 rounded-xl border border-zinc-200/50 dark:border-zinc-800/50 shadow-sm">
+        <div className="px-8 py-3 flex flex-wrap items-center justify-between gap-6 bg-zinc-50/30 dark:bg-zinc-900/10 border-b border-zinc-200/40 dark:border-zinc-800/40">
+          <div className="flex flex-wrap items-center gap-4">
+            <div className="flex items-center gap-2 bg-white dark:bg-[#121214] p-1.5 rounded-xl border border-zinc-200/50 dark:border-zinc-800/50 shadow-soft">
               <select 
-                className="bg-transparent border-none text-[10px] font-black uppercase outline-none cursor-pointer text-zinc-500 dark:text-zinc-400 tracking-widest px-2 py-1"
+                className="bg-transparent border-none premium-label outline-none cursor-pointer px-3 py-1"
                 value={filterStatus}
                 onChange={e => setFilterStatus(e.target.value as any)}
               >
@@ -1060,9 +1071,9 @@ export default function App() {
               </select>
             </div>
 
-            <div className="flex items-center gap-2 bg-white dark:bg-zinc-900 p-1 rounded-xl border border-zinc-200/50 dark:border-zinc-800/50 shadow-sm">
-              <div className="flex items-center gap-2 px-2">
-                <span className="text-[10px] font-black uppercase text-zinc-400 tracking-widest">Conclusão:</span>
+            <div className="flex items-center gap-3 bg-white dark:bg-[#121214] p-1.5 rounded-xl border border-zinc-200/50 dark:border-zinc-800/50 shadow-soft">
+              <div className="flex items-center gap-3 px-3">
+                <span className="premium-label">Conclusão:</span>
                 <input 
                   type="date"
                   className="bg-transparent border-none text-[10px] font-bold uppercase outline-none cursor-pointer text-zinc-600 dark:text-zinc-300"
@@ -1070,8 +1081,8 @@ export default function App() {
                   onChange={e => setStartDate(e.target.value)}
                 />
               </div>
-              <div className="text-zinc-300 dark:text-zinc-700 font-light">/</div>
-              <div className="flex items-center gap-2 px-2">
+              <div className="text-zinc-200 dark:text-zinc-800 font-light">/</div>
+              <div className="flex items-center gap-3 px-3">
                 <input 
                   type="date"
                   className="bg-transparent border-none text-[10px] font-bold uppercase outline-none cursor-pointer text-zinc-600 dark:text-zinc-300"
@@ -1082,7 +1093,7 @@ export default function App() {
               {(startDate || endDate || filterStatus !== 'Todos') && (
                 <button 
                   onClick={() => { setStartDate(''); setEndDate(''); setFilterStatus('Todos'); }}
-                  className="p-1 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg text-red-500 transition-colors"
+                  className="p-1.5 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg text-red-500 transition-all"
                 >
                   <X size={14} />
                 </button>
@@ -1090,42 +1101,42 @@ export default function App() {
             </div>
           </div>
 
-          <div className="flex items-center gap-3">
-            <div className="flex items-center bg-zinc-200/50 dark:bg-zinc-800/50 p-1 rounded-xl shadow-inner">
+          <div className="flex items-center gap-6">
+            <div className="flex items-center bg-zinc-100/50 dark:bg-zinc-900/50 p-1.5 rounded-2xl shadow-inner border border-zinc-200/30 dark:border-zinc-800/30">
               <button 
                 onClick={() => setViewMode('kanban')}
-                className={`p-1.5 rounded-lg transition-all ${viewMode === 'kanban' ? 'bg-white dark:bg-zinc-800 text-emerald-600 shadow-sm' : 'text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300'}`}
+                className={`p-2.5 rounded-xl transition-all duration-700 ${viewMode === 'kanban' ? 'bg-white dark:bg-zinc-800 text-emerald-600 shadow-premium border border-zinc-200/50 dark:border-zinc-800/50' : 'text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300'}`}
                 title="Visualização Kanban"
               >
                 <LayoutDashboard size={16} />
               </button>
               <button 
                 onClick={() => setViewMode('list')}
-                className={`p-1.5 rounded-lg transition-all ${viewMode === 'list' ? 'bg-white dark:bg-zinc-800 text-emerald-600 shadow-sm' : 'text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300'}`}
+                className={`p-2.5 rounded-xl transition-all duration-700 ${viewMode === 'list' ? 'bg-white dark:bg-zinc-800 text-emerald-600 shadow-premium border border-zinc-200/50 dark:border-zinc-800/50' : 'text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300'}`}
                 title="Visualização em Lista"
               >
                 <List size={16} />
               </button>
             </div>
 
-            <div className="w-px h-6 bg-zinc-200 dark:bg-zinc-800 mx-1" />
+            <div className="w-px h-8 bg-zinc-200/50 dark:bg-zinc-800/50 mx-1" />
 
-            <div className="flex items-center gap-1">
+            <div className="flex items-center gap-3">
               <button 
                 onClick={exportToExcel}
-                className="p-2 rounded-lg hover:bg-zinc-200 dark:hover:bg-zinc-800 transition-colors text-emerald-600"
+                className="p-3 rounded-2xl hover:bg-white dark:hover:bg-zinc-800 transition-all text-emerald-600 hover:shadow-premium border border-transparent hover:border-zinc-200/50 dark:hover:border-zinc-800/50 hover:scale-110 active:scale-95"
                 title="Exportar Excel"
               >
                 <Download size={18} />
               </button>
               <button 
                 onClick={exportBackup}
-                className="p-2 rounded-lg hover:bg-zinc-200 dark:hover:bg-zinc-800 transition-colors text-zinc-400"
+                className="p-3 rounded-2xl hover:bg-white dark:hover:bg-zinc-800 transition-all text-zinc-400 hover:text-zinc-600 hover:shadow-premium border border-transparent hover:border-zinc-200/50 dark:hover:border-zinc-800/50 hover:scale-110 active:scale-95"
                 title="Backup JSON"
               >
                 <ClipboardCheck size={18} />
               </button>
-              <label className="p-2 rounded-lg hover:bg-zinc-200 dark:hover:bg-zinc-800 transition-colors cursor-pointer" title="Importar JSON">
+              <label className="p-3 rounded-2xl hover:bg-white dark:hover:bg-zinc-800 transition-all cursor-pointer text-zinc-400 hover:text-zinc-600 hover:shadow-premium border border-transparent hover:border-zinc-200/50 dark:hover:border-zinc-800/50 hover:scale-110 active:scale-95" title="Importar JSON">
                 <Upload size={18} />
                 <input type="file" accept=".json" className="hidden" onChange={importData} />
               </label>
@@ -1160,15 +1171,15 @@ export default function App() {
                     handleDrop(e, status);
                   }}
                 >
-                  <div className="flex items-center justify-between px-3">
-                    <div className="flex items-center gap-2.5">
-                      <div className={`w-2 h-6 rounded-full ${
-                        status === 'A Fazer' ? 'bg-zinc-400' :
-                        status === 'Em Andamento' ? 'bg-blue-500' :
-                        'bg-emerald-500'
+                  <div className="flex items-center justify-between px-6 py-2">
+                    <div className="flex items-center gap-4">
+                      <div className={`w-2 h-2 rounded-full transition-all duration-700 shadow-glow ${
+                        status === 'A Fazer' ? 'bg-zinc-300 dark:bg-zinc-700' :
+                        status === 'Em Andamento' ? 'bg-blue-500 shadow-blue-500/20' :
+                        'bg-emerald-500 shadow-emerald-500/20'
                       }`} />
-                      <h2 className="text-xs font-black uppercase tracking-[0.2em] text-zinc-500 dark:text-zinc-400">{status}</h2>
-                      <span className="bg-zinc-200 dark:bg-zinc-800 text-[10px] font-black px-2 py-0.5 rounded-full text-zinc-500">
+                      <h2 className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-900 dark:text-zinc-100">{status}</h2>
+                      <span className="bg-white dark:bg-zinc-900 border border-zinc-200/50 dark:border-zinc-800/50 text-[9px] font-black px-2.5 py-1 rounded-full text-zinc-400 dark:text-zinc-600 shadow-soft">
                         {filteredTasks.filter(t => t.status === status).length}
                       </span>
                     </div>
@@ -1176,7 +1187,7 @@ export default function App() {
 
                   <div className={`kanban-column flex-1 flex flex-col gap-4 overflow-y-auto pr-1 custom-scrollbar ${
                     draggedOverColumn === status 
-                      ? 'ring-2 ring-emerald-500/50 bg-emerald-50/10 dark:bg-emerald-900/10 border-emerald-500/30' 
+                      ? 'ring-1 ring-emerald-500/20 bg-emerald-50/5 dark:bg-emerald-900/5 border-emerald-500/20' 
                       : ''
                   }`}>
                     <AnimatePresence mode="popLayout">
@@ -1194,11 +1205,11 @@ export default function App() {
                     </AnimatePresence>
                     
                     {filteredTasks.filter(t => t.status === status).length === 0 && (
-                      <div className="flex-1 flex flex-col items-center justify-center text-zinc-400 dark:text-zinc-600 border-2 border-dashed border-zinc-200 dark:border-zinc-800/50 rounded-3xl p-8 transition-colors duration-500">
-                        <div className="mb-3 opacity-20">
-                          {status === 'Concluído' ? <CheckCircle2 size={40} /> : <ArrowRight size={40} />}
+                      <div className="flex-1 flex flex-col items-center justify-center text-zinc-300 dark:text-zinc-700 border-2 border-dashed border-zinc-200/40 dark:border-zinc-800/40 rounded-[2rem] p-8 transition-all duration-500">
+                        <div className="mb-4 opacity-10">
+                          {status === 'Concluído' ? <CheckCircle2 size={48} /> : <ArrowRight size={48} />}
                         </div>
-                        <p className="text-[10px] font-black uppercase tracking-widest">Vazio</p>
+                        <p className="premium-label text-center">Vazio</p>
                       </div>
                     )}
                   </div>
@@ -1225,18 +1236,44 @@ export default function App() {
 
       {/* Footer / Stats */}
       <footer className="p-4 glass-panel border-t border-zinc-200 dark:border-zinc-800 flex justify-between items-center text-[10px] uppercase tracking-widest font-bold text-zinc-500">
-        <div className="flex gap-6">
-          <div className="flex items-center gap-2">
-            <div className="w-2 h-2 rounded-full bg-emerald-500" />
-            <span>Total: {tasks.length}</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-2 h-2 rounded-full bg-amber-500" />
-            <span>Pendentes: {tasks.filter(t => t.status !== 'Concluído').length}</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-2 h-2 rounded-full bg-red-500" />
-            <span>Vencidos: {tasks.filter(t => t.status !== 'Concluído' && new Date(t.deadline) < new Date()).length}</span>
+        <div 
+          className="flex items-center gap-6 cursor-pointer group select-none"
+          onClick={() => setSummaryMode(prev => prev === 'daily' ? 'consolidated' : 'daily')}
+          title="Clique para alternar entre Diário e Consolidado"
+        >
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-zinc-100 dark:bg-zinc-900/50 border border-zinc-200/50 dark:border-zinc-800/50 group-hover:border-emerald-500/30 transition-all duration-500">
+            <span className={`transition-colors duration-500 ${summaryMode === 'daily' ? 'text-emerald-600' : 'text-zinc-400'}`}>
+              {summaryMode === 'daily' ? 'Diário' : 'Consolidado'}
+            </span>
+            <div className="w-1 h-1 rounded-full bg-zinc-300 dark:bg-zinc-700" />
+            
+            {(() => {
+              const today = new Date().toISOString().split('T')[0];
+              const displayTasks = summaryMode === 'daily' 
+                ? tasks.filter(t => t.deadline.startsWith(today) || t.createdAt.startsWith(today))
+                : tasks;
+              
+              const total = displayTasks.length;
+              const pending = displayTasks.filter(t => t.status !== 'Concluído').length;
+              const overdue = displayTasks.filter(t => t.status !== 'Concluído' && new Date(t.deadline) < new Date()).length;
+
+              return (
+                <div className="flex gap-6 ml-2">
+                  <div className="flex items-center gap-2">
+                    <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                    <span>Total: {total}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+                    <span>Pendentes: {pending}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-1.5 h-1.5 rounded-full bg-red-500" />
+                    <span>Vencidos: {overdue}</span>
+                  </div>
+                </div>
+              );
+            })()}
           </div>
         </div>
       </footer>
