@@ -1059,20 +1059,27 @@ export default function App() {
 
           <div className="flex items-center gap-2 w-full md:w-auto justify-end">
             <button 
+              onClick={() => { setEditingTask(null); setIsModalOpen(true); }}
+              className="md:hidden bg-emerald-600 dark:bg-emerald-500 text-white rounded-2xl font-bold text-[10px] uppercase tracking-[0.25em] hover:bg-emerald-700 dark:hover:bg-emerald-400 active:scale-95 transition-all duration-500 shadow-xl shadow-emerald-500/20 dark:shadow-emerald-500/10 border border-emerald-500/20 dark:border-emerald-400/20 flex-1 flex justify-center items-center gap-2 py-3"
+            >
+              <Plus size={16} />
+              <span>Novo</span>
+            </button>
+            <button 
               onClick={exportToExcel}
-              className="p-3 rounded-2xl hover:bg-white dark:hover:bg-zinc-800 transition-all text-emerald-600 hover:shadow-premium border border-transparent hover:border-zinc-200/50 dark:hover:border-zinc-800/50 hover:scale-110 active:scale-95 flex-1 md:flex-none flex justify-center"
+              className="p-3 rounded-2xl hover:bg-white dark:hover:bg-zinc-800 transition-all text-emerald-600 hover:shadow-premium border border-transparent hover:border-zinc-200/50 dark:hover:border-zinc-800/50 hover:scale-110 active:scale-95 flex-none flex justify-center"
               title="Exportar Excel"
             >
               <Download size={18} />
             </button>
             <button 
               onClick={exportBackup}
-              className="p-3 rounded-2xl hover:bg-white dark:hover:bg-zinc-800 transition-all text-zinc-400 hover:text-zinc-600 hover:shadow-premium border border-transparent hover:border-zinc-200/50 dark:hover:border-zinc-800/50 hover:scale-110 active:scale-95 flex-1 md:flex-none flex justify-center"
+              className="p-3 rounded-2xl hover:bg-white dark:hover:bg-zinc-800 transition-all text-zinc-400 hover:text-zinc-600 hover:shadow-premium border border-transparent hover:border-zinc-200/50 dark:hover:border-zinc-800/50 hover:scale-110 active:scale-95 flex-none flex justify-center"
               title="Backup JSON"
             >
               <ClipboardCheck size={18} />
             </button>
-            <label className="p-3 rounded-2xl hover:bg-white dark:hover:bg-zinc-800 transition-all cursor-pointer text-zinc-400 hover:text-zinc-600 hover:shadow-premium border border-transparent hover:border-zinc-200/50 dark:hover:border-zinc-800/50 hover:scale-110 active:scale-95 flex-1 md:flex-none flex justify-center" title="Importar JSON">
+            <label className="p-3 rounded-2xl hover:bg-white dark:hover:bg-zinc-800 transition-all cursor-pointer text-zinc-400 hover:text-zinc-600 hover:shadow-premium border border-transparent hover:border-zinc-200/50 dark:hover:border-zinc-800/50 hover:scale-110 active:scale-95 flex-none flex justify-center" title="Importar JSON">
               <Upload size={18} />
               <input type="file" accept=".json" className="hidden" onChange={importData} />
             </label>
