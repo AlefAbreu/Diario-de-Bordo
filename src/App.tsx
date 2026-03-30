@@ -17,7 +17,7 @@ import {
   ArrowRight,
   Pencil,
   Bell,
-  List
+  Check
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { utils, writeFile } from 'xlsx';
@@ -186,18 +186,12 @@ const ThemeToggle = ({ theme, onToggle }: { theme: 'light' | 'dark', onToggle: (
   );
 };
 
-interface TaskCardProps {
-  task: Task;
-  onEdit: (task: Task) => void;
-  onDelete: (id: number) => void | Promise<void>;
-  onDragStart: (e: React.DragEvent, id: number) => void;
-}
-
 const ListView: React.FC<{ 
   tasks: Task[], 
   onEdit: (task: Task) => void, 
-  onDelete: (id: number) => void 
-}> = ({ tasks, onEdit, onDelete }) => {
+  onDelete: (id: number) => void,
+  onToggleComplete: (task: Task) => void
+}> = ({ tasks, onEdit, onDelete, onToggleComplete }) => {
   if (tasks.length === 0) {
     return (
       <div className="flex-1 flex flex-col items-center justify-center text-zinc-400 dark:text-zinc-600 border-2 border-dashed border-zinc-200 dark:border-zinc-800/50 rounded-[3rem] p-12 transition-colors duration-500 bg-white/30 dark:bg-zinc-900/30">
@@ -211,9 +205,11 @@ const ListView: React.FC<{
   }
 
   return (
-    <div className="flex flex-col gap-3 pb-12 overflow-x-auto custom-scrollbar">
-      <div className="min-w-[1100px]">
-        <div className="grid grid-cols-[1.2fr_1fr_1.5fr_130px_130px_100px_80px] gap-4 px-8 py-4 premium-label border-b border-zinc-200/50 dark:border-zinc-800/50">
+    <div className="flex flex-col gap-3 pb-12 overflow-x-hidden md:overflow-x-auto custom-scrollbar">
+      <div className="w-full md:min-w-[1100px]">
+        {/* Desktop Header */}
+        <div className="hidden md:grid grid-cols-[40px_1.2fr_1fr_1.5fr_130px_130px_100px_80px] gap-4 px-8 py-4 premium-label border-b border-zinc-200/50 dark:border-zinc-800/50">
+          <div></div>
           <div>Solicitante / Local</div>
           <div>Motivo / PN</div>
           <div>Ação Realizada</div>
@@ -225,6 +221,7 @@ const ListView: React.FC<{
         <AnimatePresence mode="popLayout">
           {tasks.map(task => {
             const isOverdue = task.status !== 'Concluído' && new Date(task.deadline) < new Date();
+            const isCompleted = task.status === 'Concluído';
             return (
               <motion.div
                 key={task.id}
@@ -233,33 +230,77 @@ const ListView: React.FC<{
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.98 }}
                 onDoubleClick={() => onEdit(task)}
-                className={`grid grid-cols-[1.2fr_1fr_1.5fr_130px_130px_100px_80px] gap-6 items-center px-10 py-6 bg-white dark:bg-[#111113] border border-zinc-200/40 dark:border-zinc-800/40 rounded-[2rem] hover:shadow-premium hover:border-emerald-500/30 transition-all duration-700 group cursor-pointer mt-4 ${isOverdue ? 'task-card-overdue' : ''}`}
+                className={`flex flex-col md:grid md:grid-cols-[40px_1.2fr_1fr_1.5fr_130px_130px_100px_80px] gap-4 md:gap-6 items-start md:items-center px-4 py-4 md:px-10 md:py-6 bg-white dark:bg-[#111113] border border-zinc-200/40 dark:border-zinc-800/40 rounded-[1.5rem] md:rounded-[2rem] hover:shadow-premium hover:border-emerald-500/30 transition-all duration-700 group cursor-pointer mt-3 md:mt-4 ${isOverdue ? 'task-card-overdue' : ''} ${isCompleted ? 'opacity-60 hover:opacity-100' : ''}`}
               >
-                <div className="flex items-center gap-5 min-w-0">
-                  <div className={`w-1.5 h-10 rounded-full flex-shrink-0 transition-all duration-700 ${isOverdue ? 'bg-red-500/30 shadow-glow' : 'bg-emerald-500/30 shadow-glow'}`} />
+                {/* Mobile Header & Checkbox */}
+                <div className="flex items-center justify-between w-full md:w-auto md:justify-center">
+                  <div className="flex items-center gap-3 md:gap-4">
+                    <button
+                      onClick={(e) => { e.stopPropagation(); onToggleComplete(task); }}
+                      className={`w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-all duration-500 flex-shrink-0 ${isCompleted ? 'bg-emerald-500 border-emerald-500 text-white shadow-glow' : 'border-zinc-300 dark:border-zinc-700 text-transparent hover:border-emerald-500'}`}
+                    >
+                      <Check size={14} className={isCompleted ? 'opacity-100' : 'opacity-0'} strokeWidth={3} />
+                    </button>
+                    <div className="md:hidden">
+                      <p className={`text-sm font-bold truncate transition-colors duration-700 ${isCompleted ? 'line-through text-zinc-400 dark:text-zinc-600' : 'text-zinc-800 dark:text-zinc-100'}`}>{task.solicitante}</p>
+                      <p className="premium-label truncate mt-0.5">{task.line}</p>
+                    </div>
+                  </div>
+                  <div className="md:hidden">
+                    <span className={`text-[9px] font-black uppercase tracking-[0.2em] px-2 py-1 rounded-full border transition-all duration-700 ${
+                      task.status === 'A Fazer' ? 'bg-zinc-50 text-zinc-400 border-zinc-200/50 dark:bg-zinc-900/50 dark:border-zinc-800/50' :
+                      task.status === 'Em Andamento' ? 'bg-blue-500/5 text-blue-500 border-blue-500/20 dark:bg-blue-900/10 dark:border-blue-800/20' :
+                      'bg-emerald-500/5 text-emerald-600 border-emerald-500/20 dark:bg-emerald-900/10 dark:border-emerald-800/20'
+                    }`}>
+                      {task.status}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Desktop Solicitante / Local */}
+                <div className="hidden md:flex items-center gap-5 min-w-0">
+                  <div className={`w-1.5 h-10 rounded-full flex-shrink-0 transition-all duration-700 ${isOverdue ? 'bg-red-500/30 shadow-glow' : isCompleted ? 'bg-emerald-500/30' : 'bg-blue-500/30'}`} />
                   <div className="truncate">
-                    <p className="text-sm font-bold truncate group-hover:text-emerald-600 transition-colors duration-700">{task.solicitante}</p>
+                    <p className={`text-sm font-bold truncate transition-colors duration-700 ${isCompleted ? 'line-through text-zinc-400 dark:text-zinc-600' : 'group-hover:text-emerald-600'}`}>{task.solicitante}</p>
                     <p className="premium-label truncate mt-1">{task.line}</p>
                   </div>
                 </div>
-                <div className="truncate">
-                  <p className="text-[11px] font-bold truncate text-zinc-700 dark:text-zinc-200">{task.reason}</p>
-                  <p className="text-[10px] text-zinc-400 font-mono tracking-tighter truncate mt-0.5">{task.pn || '-'}</p>
+
+                {/* Motivo / PN */}
+                <div className="w-full md:w-auto truncate">
+                  <p className={`text-[11px] font-bold truncate transition-colors duration-700 ${isCompleted ? 'text-zinc-400 dark:text-zinc-600' : 'text-zinc-700 dark:text-zinc-200'}`}>
+                    <span className="md:hidden text-zinc-400 mr-1 font-normal">Motivo:</span>{task.reason}
+                  </p>
+                  <p className="text-[10px] text-zinc-400 font-mono tracking-tighter truncate mt-0.5">
+                    <span className="md:hidden text-zinc-400 mr-1 font-normal">PN:</span>{task.pn || '-'}
+                  </p>
                 </div>
-                <div className="truncate">
-                  <p className="text-[11px] text-zinc-500 dark:text-zinc-400 line-clamp-2 leading-relaxed font-medium">{task.description || '-'}</p>
+
+                {/* Descrição */}
+                <div className="w-full md:w-auto">
+                  <p className={`text-[11px] line-clamp-2 leading-relaxed font-medium transition-colors duration-700 ${isCompleted ? 'text-zinc-400/50 dark:text-zinc-600/50' : 'text-zinc-500 dark:text-zinc-400'}`}>
+                    <span className="md:hidden text-zinc-400 mr-1 font-normal block mb-1">Ação:</span>{task.description || '-'}
+                  </p>
                 </div>
-                <div className="text-[10px] font-bold text-zinc-400 tracking-tight leading-tight">
-                  {new Date(task.createdAt).toLocaleString('pt-BR').split(' ').map((p, i) => (
-                    <div key={i}>{p}</div>
-                  ))}
+
+                {/* Datas */}
+                <div className="flex justify-between w-full md:contents mt-2 md:mt-0 pt-3 md:pt-0 border-t border-zinc-100 dark:border-zinc-800/50 md:border-none">
+                  <div className="text-[10px] font-bold text-zinc-400 tracking-tight leading-tight">
+                    <span className="md:hidden block mb-1 uppercase tracking-widest opacity-60">Interação</span>
+                    {new Date(task.createdAt).toLocaleString('pt-BR').split(' ').map((p, i) => (
+                      <span key={i} className="mr-1 md:mr-0 md:block">{p}</span>
+                    ))}
+                  </div>
+                  <div className={`text-[10px] font-black leading-tight tracking-tight text-right md:text-left ${isOverdue ? 'text-red-500/80' : isCompleted ? 'text-emerald-600/50' : 'text-emerald-600/80'}`}>
+                    <span className="md:hidden block mb-1 uppercase tracking-widest opacity-60 text-zinc-400">Prazo</span>
+                    {new Date(task.deadline).toLocaleString('pt-BR').split(' ').map((p, i) => (
+                      <span key={i} className="mr-1 md:mr-0 md:block">{p}</span>
+                    ))}
+                  </div>
                 </div>
-                <div className={`text-[10px] font-black leading-tight tracking-tight ${isOverdue ? 'text-red-500/80' : 'text-emerald-600/80'}`}>
-                  {new Date(task.deadline).toLocaleString('pt-BR').split(' ').map((p, i) => (
-                    <div key={i}>{p}</div>
-                  ))}
-                </div>
-                <div>
+
+                {/* Status Desktop */}
+                <div className="hidden md:block">
                   <span className={`text-[9px] font-black uppercase tracking-[0.2em] px-4 py-1.5 rounded-full border transition-all duration-700 ${
                     task.status === 'A Fazer' ? 'bg-zinc-50 text-zinc-400 border-zinc-200/50 dark:bg-zinc-900/50 dark:border-zinc-800/50' :
                     task.status === 'Em Andamento' ? 'bg-blue-500/5 text-blue-500 border-blue-500/20 dark:bg-blue-900/10 dark:border-blue-800/20' :
@@ -268,18 +309,22 @@ const ListView: React.FC<{
                     {task.status}
                   </span>
                 </div>
-                <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-all duration-700 transform translate-x-4 group-hover:translate-x-0">
+
+                {/* Ações */}
+                <div className="flex justify-end gap-2 w-full md:w-auto md:opacity-0 group-hover:opacity-100 transition-all duration-700 md:transform md:translate-x-4 group-hover:translate-x-0 mt-2 md:mt-0 pt-4 md:pt-0 border-t border-zinc-100 dark:border-zinc-800/50 md:border-none">
                   <button 
-                    onClick={() => onEdit(task)}
-                    className="p-3 bg-zinc-50 dark:bg-zinc-900 hover:bg-white dark:hover:bg-zinc-800 text-zinc-400 hover:text-emerald-600 rounded-2xl shadow-soft border border-transparent hover:border-zinc-200/50 dark:hover:border-zinc-800/50 transition-all"
+                    onClick={(e) => { e.stopPropagation(); onEdit(task); }}
+                    className="flex-1 md:flex-none flex justify-center items-center gap-2 p-3 bg-zinc-50 dark:bg-zinc-900 hover:bg-white dark:hover:bg-zinc-800 text-zinc-400 hover:text-emerald-600 rounded-2xl shadow-soft border border-transparent hover:border-zinc-200/50 dark:hover:border-zinc-800/50 transition-all"
                   >
                     <Pencil size={14} />
+                    <span className="md:hidden text-[10px] font-bold uppercase tracking-widest">Editar</span>
                   </button>
                   <button 
-                    onClick={() => onDelete(task.id!)}
-                    className="p-3 bg-zinc-50 dark:bg-zinc-900 hover:bg-white dark:hover:bg-zinc-800 text-zinc-400 hover:text-red-500 rounded-2xl shadow-soft border border-transparent hover:border-zinc-200/50 dark:hover:border-zinc-800/50 transition-all"
+                    onClick={(e) => { e.stopPropagation(); onDelete(task.id!); }}
+                    className="flex-1 md:flex-none flex justify-center items-center gap-2 p-3 bg-red-50/50 dark:bg-red-900/10 hover:bg-red-50 dark:hover:bg-red-900/20 text-red-400 hover:text-red-600 rounded-2xl shadow-soft border border-transparent hover:border-red-200/50 dark:hover:border-red-800/50 transition-all"
                   >
                     <Trash2 size={14} />
+                    <span className="md:hidden text-[10px] font-bold uppercase tracking-widest">Excluir</span>
                   </button>
                 </div>
               </motion.div>
@@ -288,113 +333,6 @@ const ListView: React.FC<{
         </AnimatePresence>
       </div>
     </div>
-  );
-};
-
-const TaskCard: React.FC<TaskCardProps> = ({ task, onEdit, onDelete, onDragStart }) => {
-  const isOverdue = task.status !== 'Concluído' && new Date(task.deadline) < new Date();
-  const [showToast, setShowToast] = useState(false);
-  
-  const copyToClipboard = async (e: React.MouseEvent) => {
-    e.stopPropagation();
-    const text = `📋 *DETALHES DO ATENDIMENTO*\n` +
-                  `━━━━━━━━━━━━━━━━━━━━━\n` +
-                  `👤 *Solicitante:* ${task.solicitante}\n` +
-                  `📍 *Local:* ${task.line}\n` +
-                  `📦 *PN:* ${task.pn}\n` +
-                  `❓ *Motivo:* ${task.reason}\n` +
-                  `⏰ *Interação:* ${new Date(task.createdAt).toLocaleString('pt-BR')}\n` +
-                  `⏳ *Status:* ${task.status}\n\n` +
-                  `📝 *Ação:*\n${task.description}\n\n` +
-                  `📅 *${task.status === 'Concluído' ? 'Conclusão' : 'Agendamento'}:* ${new Date(task.deadline).toLocaleString('pt-BR')}`;
-    
-    try {
-      await navigator.clipboard.writeText(text);
-      setShowToast(true);
-      setTimeout(() => setShowToast(false), 2000);
-    } catch (err) {
-      console.error('Falha ao copiar', err);
-    }
-  };
-
-  return (
-    <motion.div
-      layout
-      initial={{ opacity: 0, scale: 0.98 }}
-      animate={{ opacity: 1, scale: 1 }}
-      exit={{ opacity: 0, scale: 0.98 }}
-      draggable
-      onDragStart={(e) => onDragStart(e, task.id!)}
-      onDoubleClick={() => onEdit(task)}
-      className={`task-card group relative hover-lift ${isOverdue ? 'task-card-overdue' : ''}`}
-    >
-      <div className="flex justify-between items-start mb-4">
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 mb-1">
-            <span className="premium-label truncate">{task.line}</span>
-            <div className={`w-1.5 h-1.5 rounded-full ${isOverdue ? 'bg-red-500 animate-pulse' : 'bg-emerald-500'}`} />
-          </div>
-          <h3 className="text-sm font-bold text-zinc-800 dark:text-zinc-100 truncate group-hover:text-emerald-600 transition-colors duration-500">
-            {task.solicitante}
-          </h3>
-        </div>
-        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all duration-500 translate-x-2 group-hover:translate-x-0">
-          <button 
-            onClick={copyToClipboard}
-            className="p-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-400 hover:text-emerald-600 rounded-xl transition-all"
-            title="Copiar Detalhes"
-          >
-            <ClipboardCheck size={14} />
-          </button>
-          <button 
-            onClick={(e) => { e.stopPropagation(); onEdit(task); }}
-            className="p-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-400 hover:text-emerald-600 rounded-xl transition-all"
-          >
-            <Pencil size={14} />
-          </button>
-        </div>
-      </div>
-
-      <div className="space-y-3">
-        <div className="p-3 bg-zinc-50/50 dark:bg-zinc-900/50 rounded-xl border border-zinc-200/30 dark:border-zinc-800/30">
-          <p className="text-[11px] font-medium text-zinc-600 dark:text-zinc-300 line-clamp-2 leading-relaxed">
-            {task.reason}
-          </p>
-          <p className="text-[10px] text-zinc-400 font-mono mt-1 tracking-tighter">
-            PN: {task.pn || '-'}
-          </p>
-        </div>
-
-        <div className="flex items-center justify-between pt-2 border-t border-zinc-100 dark:border-zinc-800/50">
-          <div className="flex items-center gap-1.5 text-zinc-400">
-            <Clock size={12} />
-            <span className={`text-[10px] font-bold tracking-tight ${isOverdue ? 'text-red-500/80' : 'text-zinc-500'}`}>
-              {new Date(task.deadline).toLocaleDateString('pt-BR')}
-            </span>
-          </div>
-          <span className={`text-[9px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full border ${
-            task.status === 'A Fazer' ? 'bg-zinc-50 text-zinc-400 border-zinc-200/50 dark:bg-zinc-900/50 dark:border-zinc-800/50' :
-            task.status === 'Em Andamento' ? 'bg-blue-50/50 text-blue-500 border-blue-200/30 dark:bg-blue-900/10 dark:border-blue-800/20' :
-            'bg-emerald-50/50 text-emerald-600 border-emerald-200/30 dark:bg-emerald-900/10 dark:border-emerald-800/20'
-          }`}>
-            {task.status}
-          </span>
-        </div>
-      </div>
-
-      <AnimatePresence>
-        {showToast && (
-          <motion.div
-            initial={{ opacity: 0, y: 10, scale: 0.9 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.9 }}
-            className="absolute inset-x-4 bottom-4 bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 py-2 px-4 rounded-xl text-[10px] font-bold uppercase tracking-widest text-center shadow-xl z-10"
-          >
-            Copiado com sucesso!
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </motion.div>
   );
 };
 
@@ -642,13 +580,12 @@ export default function App() {
   const [search, setSearch] = useState('');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
-  const [filterStatus, setFilterStatus] = useState<TaskStatus | 'Todos'>('Todos');
-  const [viewMode, setViewMode] = useState<'kanban' | 'list'>('kanban');
+  const [activeTab, setActiveTab] = useState<TaskStatus>('A Fazer');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [toast, setToast] = useState<{ message: string, type: 'success' | 'error' | 'warning' } | null>(null);
-  const [draggedOverColumn, setDraggedOverColumn] = useState<TaskStatus | null>(null);
+
   const [upcomingDeadlines, setUpcomingDeadlines] = useState<Task[]>([]);
   const [summaryMode, setSummaryMode] = useState<'daily' | 'consolidated'>('consolidated');
   const [showNotifications, setShowNotifications] = useState(false);
@@ -732,6 +669,21 @@ export default function App() {
     }
   };
 
+  const handleToggleComplete = async (task: Task) => {
+    try {
+      const newStatus: TaskStatus = task.status === 'Concluído' ? 'A Fazer' : 'Concluído';
+      const updatedTask = { ...task, status: newStatus };
+      if (newStatus === 'Concluído') {
+        updatedTask.deadline = new Date().toISOString().slice(0, 16);
+      }
+      await dbService.updateTask(updatedTask);
+      setToast({ message: `Tarefa marcada como ${newStatus}!`, type: 'success' });
+      loadTasks();
+    } catch (err) {
+      setToast({ message: 'Erro ao atualizar status.', type: 'error' });
+    }
+  };
+
   const handleDeleteTask = async (id: number) => {
     if (confirm('Deseja realmente excluir este registro?')) {
       try {
@@ -744,31 +696,7 @@ export default function App() {
     }
   };
 
-  const handleDragStart = (e: React.DragEvent, id: number) => {
-    e.dataTransfer.setData('text/plain', id.toString());
-    e.dataTransfer.setData('text', id.toString());
-    e.dataTransfer.effectAllowed = 'move';
-  };
 
-  const handleDrop = async (e: React.DragEvent, status: TaskStatus) => {
-    e.preventDefault();
-    const idStr = e.dataTransfer.getData('text') || e.dataTransfer.getData('text/plain');
-    const id = parseInt(idStr);
-    
-    if (isNaN(id)) return;
-
-    const task = tasks.find(t => t.id === id);
-    if (task && task.status !== status) {
-      try {
-        const updatedTask = { ...task, status };
-        await dbService.updateTask(updatedTask);
-        setToast({ message: `Status alterado para: ${status}`, type: 'success' });
-        loadTasks();
-      } catch (err) {
-        setToast({ message: 'Erro ao atualizar status.', type: 'error' });
-      }
-    }
-  };
 
   const exportToExcel = async () => {
     const all = await dbService.getAllTasks();
@@ -864,8 +792,6 @@ export default function App() {
     
     if (!matchesSearch) return false;
 
-    if (filterStatus !== 'Todos' && t.status !== filterStatus) return false;
-
     if (startDate) {
       const taskDate = new Date(t.deadline).toISOString().split('T')[0];
       if (taskDate < startDate) return false;
@@ -881,6 +807,7 @@ export default function App() {
 
   const columns: TaskStatus[] = ['A Fazer', 'Em Andamento', 'Concluído'];
   const hasOverdue = upcomingDeadlines.some(t => new Date(t.deadline) <= new Date());
+  const hasUpcoming = upcomingDeadlines.some(t => new Date(t.deadline) > new Date());
 
   if (isLoading) {
     return (
@@ -895,14 +822,35 @@ export default function App() {
       {/* Header */}
       <header className="sticky top-0 z-40 glass-panel shadow-sm border-b border-zinc-200/50 dark:border-zinc-800/50">
         {/* Top Bar: Logo, Search, Primary Actions */}
-        <div className="px-6 py-3 flex flex-col md:flex-row items-center justify-between gap-4 border-b border-zinc-100 dark:border-zinc-800/50">
-          <div className="flex items-center gap-4 shrink-0">
-            <div className="bg-emerald-600 p-2.5 rounded-2xl text-white shadow-xl shadow-emerald-500/20 rotate-6 hover:rotate-0 transition-all duration-700 border border-emerald-400/20">
-              <LayoutDashboard size={22} strokeWidth={2.5} />
+        <div className="px-4 md:px-6 py-3 flex flex-col md:flex-row items-center justify-between gap-4 border-b border-zinc-100 dark:border-zinc-800/50">
+          <div className="flex items-center justify-between w-full md:w-auto gap-4 shrink-0">
+            <div className="flex items-center gap-4">
+              <div className="bg-emerald-600 p-2.5 rounded-2xl text-white shadow-xl shadow-emerald-500/20 rotate-6 hover:rotate-0 transition-all duration-700 border border-emerald-400/20">
+                <LayoutDashboard size={22} strokeWidth={2.5} />
+              </div>
+              <div>
+                <h1 className="text-xl font-black tracking-tighter leading-none bg-gradient-to-br from-zinc-900 via-zinc-800 to-zinc-600 dark:from-white dark:via-zinc-100 dark:to-zinc-500 bg-clip-text text-transparent">DIÁRIO DE BORDO</h1>
+                <p className="premium-label mt-1">Gestão de Operações</p>
+              </div>
             </div>
-            <div>
-              <h1 className="text-xl font-black tracking-tighter leading-none bg-gradient-to-br from-zinc-900 via-zinc-800 to-zinc-600 dark:from-white dark:via-zinc-100 dark:to-zinc-500 bg-clip-text text-transparent">DIÁRIO DE BORDO</h1>
-              <p className="premium-label mt-1">Gestão de Operações</p>
+            {/* Mobile Actions */}
+            <div className="flex md:hidden items-center gap-2">
+              <div className="relative notifications-container">
+                <button 
+                  onClick={() => setShowNotifications(!showNotifications)}
+                  className={`p-2.5 rounded-xl transition-all relative ${
+                    hasOverdue ? 'bg-red-50 text-red-500 border border-red-200/50 dark:bg-red-900/10 dark:border-red-800/30' : 
+                    hasUpcoming ? 'bg-amber-50 text-amber-500 border border-amber-200/50 dark:bg-amber-900/10 dark:border-amber-800/30' : 
+                    'hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300 border border-transparent'
+                  }`}
+                >
+                  <Bell size={18} />
+                  {(hasOverdue || hasUpcoming) && (
+                    <span className={`absolute top-2 right-2 w-2 h-2 rounded-full border-2 border-white dark:border-[#111113] ${hasOverdue ? 'bg-red-500' : 'bg-amber-500'} animate-pulse`} />
+                  )}
+                </button>
+              </div>
+              <ThemeToggle theme={theme} onToggle={toggleTheme} />
             </div>
           </div>
 
@@ -918,7 +866,7 @@ export default function App() {
             </div>
           </div>
 
-          <div className="flex items-center gap-2 shrink-0">
+          <div className="hidden md:flex items-center gap-2 shrink-0">
             <div className="relative notifications-container">
               <button 
                 onClick={() => setShowNotifications(!showNotifications)}
@@ -1058,22 +1006,11 @@ export default function App() {
         </div>
 
         {/* Sub Header: Filters & View Toggles */}
-        <div className="px-8 py-3 flex flex-wrap items-center justify-between gap-6 bg-zinc-50/30 dark:bg-zinc-900/10 border-b border-zinc-200/40 dark:border-zinc-800/40">
-          <div className="flex flex-wrap items-center gap-4">
-            <div className="flex items-center gap-2 bg-white dark:bg-[#121214] p-1.5 rounded-xl border border-zinc-200/50 dark:border-zinc-800/50 shadow-soft">
-              <select 
-                className="bg-transparent border-none premium-label outline-none cursor-pointer px-3 py-1"
-                value={filterStatus}
-                onChange={e => setFilterStatus(e.target.value as any)}
-              >
-                <option value="Todos">Status: Todos</option>
-                {columns.map(c => <option key={c} value={c}>{c}</option>)}
-              </select>
-            </div>
-
-            <div className="flex items-center gap-3 bg-white dark:bg-[#121214] p-1.5 rounded-xl border border-zinc-200/50 dark:border-zinc-800/50 shadow-soft">
-              <div className="flex items-center gap-3 px-3">
-                <span className="premium-label">Conclusão:</span>
+        <div className="px-4 md:px-8 py-3 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 md:gap-6 bg-zinc-50/30 dark:bg-zinc-900/10 border-b border-zinc-200/40 dark:border-zinc-800/40 overflow-x-auto">
+          <div className="flex flex-col md:flex-row items-start md:items-center gap-4 md:gap-6 w-full md:w-auto">
+            <div className="flex items-center gap-2 md:gap-3 bg-white dark:bg-[#121214] p-1.5 rounded-xl border border-zinc-200/50 dark:border-zinc-800/50 shadow-soft w-full md:w-auto overflow-x-auto">
+              <div className="flex items-center gap-2 md:gap-3 px-2 md:px-3 whitespace-nowrap">
+                <span className="premium-label hidden sm:inline">Conclusão:</span>
                 <input 
                   type="date"
                   className="bg-transparent border-none text-[10px] font-bold uppercase outline-none cursor-pointer text-zinc-600 dark:text-zinc-300"
@@ -1082,7 +1019,7 @@ export default function App() {
                 />
               </div>
               <div className="text-zinc-200 dark:text-zinc-800 font-light">/</div>
-              <div className="flex items-center gap-3 px-3">
+              <div className="flex items-center gap-2 md:gap-3 px-2 md:px-3 whitespace-nowrap">
                 <input 
                   type="date"
                   className="bg-transparent border-none text-[10px] font-bold uppercase outline-none cursor-pointer text-zinc-600 dark:text-zinc-300"
@@ -1090,57 +1027,55 @@ export default function App() {
                   onChange={e => setEndDate(e.target.value)}
                 />
               </div>
-              {(startDate || endDate || filterStatus !== 'Todos') && (
+              {(startDate || endDate) && (
                 <button 
-                  onClick={() => { setStartDate(''); setEndDate(''); setFilterStatus('Todos'); }}
-                  className="p-1.5 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg text-red-500 transition-all"
+                  onClick={() => { setStartDate(''); setEndDate(''); }}
+                  className="p-1.5 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg text-red-500 transition-all shrink-0"
                 >
                   <X size={14} />
                 </button>
               )}
             </div>
+
+            <div className="flex items-center gap-1 md:gap-2 p-1 bg-zinc-100/50 dark:bg-zinc-900/50 rounded-2xl shadow-inner border border-zinc-200/30 dark:border-zinc-800/30 w-full md:w-auto overflow-x-auto hide-scrollbar">
+              {columns.map(status => (
+                <button
+                  key={status}
+                  onClick={() => setActiveTab(status)}
+                  className={`relative px-3 md:px-5 py-2 rounded-xl text-[10px] md:text-[11px] font-bold uppercase tracking-widest transition-colors duration-500 whitespace-nowrap flex-1 md:flex-none text-center ${activeTab === status ? 'text-emerald-600 dark:text-emerald-400' : 'text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300'}`}
+                >
+                  {activeTab === status && (
+                    <motion.div
+                      layoutId="activeTab"
+                      className="absolute inset-0 bg-white dark:bg-zinc-800 rounded-xl shadow-premium border border-zinc-200/50 dark:border-zinc-700/50"
+                      transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                    />
+                  )}
+                  <span className="relative z-10">{status}</span>
+                </button>
+              ))}
+            </div>
           </div>
 
-          <div className="flex items-center gap-6">
-            <div className="flex items-center bg-zinc-100/50 dark:bg-zinc-900/50 p-1.5 rounded-2xl shadow-inner border border-zinc-200/30 dark:border-zinc-800/30">
-              <button 
-                onClick={() => setViewMode('kanban')}
-                className={`p-2.5 rounded-xl transition-all duration-700 ${viewMode === 'kanban' ? 'bg-white dark:bg-zinc-800 text-emerald-600 shadow-premium border border-zinc-200/50 dark:border-zinc-800/50' : 'text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300'}`}
-                title="Visualização Kanban"
-              >
-                <LayoutDashboard size={16} />
-              </button>
-              <button 
-                onClick={() => setViewMode('list')}
-                className={`p-2.5 rounded-xl transition-all duration-700 ${viewMode === 'list' ? 'bg-white dark:bg-zinc-800 text-emerald-600 shadow-premium border border-zinc-200/50 dark:border-zinc-800/50' : 'text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300'}`}
-                title="Visualização em Lista"
-              >
-                <List size={16} />
-              </button>
-            </div>
-
-            <div className="w-px h-8 bg-zinc-200/50 dark:bg-zinc-800/50 mx-1" />
-
-            <div className="flex items-center gap-3">
-              <button 
-                onClick={exportToExcel}
-                className="p-3 rounded-2xl hover:bg-white dark:hover:bg-zinc-800 transition-all text-emerald-600 hover:shadow-premium border border-transparent hover:border-zinc-200/50 dark:hover:border-zinc-800/50 hover:scale-110 active:scale-95"
-                title="Exportar Excel"
-              >
-                <Download size={18} />
-              </button>
-              <button 
-                onClick={exportBackup}
-                className="p-3 rounded-2xl hover:bg-white dark:hover:bg-zinc-800 transition-all text-zinc-400 hover:text-zinc-600 hover:shadow-premium border border-transparent hover:border-zinc-200/50 dark:hover:border-zinc-800/50 hover:scale-110 active:scale-95"
-                title="Backup JSON"
-              >
-                <ClipboardCheck size={18} />
-              </button>
-              <label className="p-3 rounded-2xl hover:bg-white dark:hover:bg-zinc-800 transition-all cursor-pointer text-zinc-400 hover:text-zinc-600 hover:shadow-premium border border-transparent hover:border-zinc-200/50 dark:hover:border-zinc-800/50 hover:scale-110 active:scale-95" title="Importar JSON">
-                <Upload size={18} />
-                <input type="file" accept=".json" className="hidden" onChange={importData} />
-              </label>
-            </div>
+          <div className="flex items-center gap-2 w-full md:w-auto justify-end">
+            <button 
+              onClick={exportToExcel}
+              className="p-3 rounded-2xl hover:bg-white dark:hover:bg-zinc-800 transition-all text-emerald-600 hover:shadow-premium border border-transparent hover:border-zinc-200/50 dark:hover:border-zinc-800/50 hover:scale-110 active:scale-95 flex-1 md:flex-none flex justify-center"
+              title="Exportar Excel"
+            >
+              <Download size={18} />
+            </button>
+            <button 
+              onClick={exportBackup}
+              className="p-3 rounded-2xl hover:bg-white dark:hover:bg-zinc-800 transition-all text-zinc-400 hover:text-zinc-600 hover:shadow-premium border border-transparent hover:border-zinc-200/50 dark:hover:border-zinc-800/50 hover:scale-110 active:scale-95 flex-1 md:flex-none flex justify-center"
+              title="Backup JSON"
+            >
+              <ClipboardCheck size={18} />
+            </button>
+            <label className="p-3 rounded-2xl hover:bg-white dark:hover:bg-zinc-800 transition-all cursor-pointer text-zinc-400 hover:text-zinc-600 hover:shadow-premium border border-transparent hover:border-zinc-200/50 dark:hover:border-zinc-800/50 hover:scale-110 active:scale-95 flex-1 md:flex-none flex justify-center" title="Importar JSON">
+              <Upload size={18} />
+              <input type="file" accept=".json" className="hidden" onChange={importData} />
+            </label>
           </div>
         </div>
       </header>
@@ -1148,100 +1083,32 @@ export default function App() {
       {/* Main Content */}
       <main className="flex-1 p-6 md:p-8 overflow-x-auto bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] dark:bg-[radial-gradient(#18181b_1px,transparent_1px)] [background-size:24px_24px]">
         <AnimatePresence mode="wait">
-          {viewMode === 'kanban' ? (
-            <motion.div 
-              key="kanban"
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: 20 }}
-              className="flex gap-6 min-w-max h-full"
-            >
-              {columns.map(status => (
-                <div 
-                  key={status} 
-                  className="w-[280px] md:flex-1 flex flex-col gap-4"
-                  onDragOver={e => {
-                    e.preventDefault();
-                    e.dataTransfer.dropEffect = 'move';
-                    setDraggedOverColumn(status);
-                  }}
-                  onDragLeave={() => setDraggedOverColumn(null)}
-                  onDrop={e => {
-                    setDraggedOverColumn(null);
-                    handleDrop(e, status);
-                  }}
-                >
-                  <div className="flex items-center justify-between px-6 py-2">
-                    <div className="flex items-center gap-4">
-                      <div className={`w-2 h-2 rounded-full transition-all duration-700 shadow-glow ${
-                        status === 'A Fazer' ? 'bg-zinc-300 dark:bg-zinc-700' :
-                        status === 'Em Andamento' ? 'bg-blue-500 shadow-blue-500/20' :
-                        'bg-emerald-500 shadow-emerald-500/20'
-                      }`} />
-                      <h2 className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-900 dark:text-zinc-100">{status}</h2>
-                      <span className="bg-white dark:bg-zinc-900 border border-zinc-200/50 dark:border-zinc-800/50 text-[9px] font-black px-2.5 py-1 rounded-full text-zinc-400 dark:text-zinc-600 shadow-soft">
-                        {filteredTasks.filter(t => t.status === status).length}
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className={`kanban-column flex-1 flex flex-col gap-4 overflow-y-auto pr-1 custom-scrollbar ${
-                    draggedOverColumn === status 
-                      ? 'ring-1 ring-emerald-500/20 bg-emerald-50/5 dark:bg-emerald-900/5 border-emerald-500/20' 
-                      : ''
-                  }`}>
-                    <AnimatePresence mode="popLayout">
-                      {filteredTasks
-                        .filter(t => t.status === status)
-                        .map(task => (
-                          <TaskCard 
-                            key={task.id} 
-                            task={task} 
-                            onEdit={(t) => { setEditingTask(t); setIsModalOpen(true); }}
-                            onDelete={handleDeleteTask}
-                            onDragStart={handleDragStart}
-                          />
-                        ))}
-                    </AnimatePresence>
-                    
-                    {filteredTasks.filter(t => t.status === status).length === 0 && (
-                      <div className="flex-1 flex flex-col items-center justify-center text-zinc-300 dark:text-zinc-700 border-2 border-dashed border-zinc-200/40 dark:border-zinc-800/40 rounded-[2rem] p-8 transition-all duration-500">
-                        <div className="mb-4 opacity-10">
-                          {status === 'Concluído' ? <CheckCircle2 size={48} /> : <ArrowRight size={48} />}
-                        </div>
-                        <p className="premium-label text-center">Vazio</p>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </motion.div>
-          ) : (
-            <motion.div 
-              key="list"
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -20 }}
-              className="max-w-6xl mx-auto h-full flex flex-col"
-            >
-              <ListView 
-                tasks={filteredTasks} 
-                onEdit={(t) => { setEditingTask(t); setIsModalOpen(true); }}
-                onDelete={handleDeleteTask}
-              />
-            </motion.div>
-          )}
+          <motion.div 
+            key={activeTab}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.3 }}
+            className="max-w-6xl mx-auto h-full flex flex-col"
+          >
+            <ListView 
+              tasks={filteredTasks.filter(t => t.status === activeTab)} 
+              onEdit={(t) => { setEditingTask(t); setIsModalOpen(true); }}
+              onDelete={handleDeleteTask}
+              onToggleComplete={handleToggleComplete}
+            />
+          </motion.div>
         </AnimatePresence>
       </main>
 
       {/* Footer / Stats */}
-      <footer className="p-4 glass-panel border-t border-zinc-200 dark:border-zinc-800 flex justify-between items-center text-[10px] uppercase tracking-widest font-bold text-zinc-500">
+      <footer className="p-4 glass-panel border-t border-zinc-200 dark:border-zinc-800 flex justify-between items-center text-[10px] uppercase tracking-widest font-bold text-zinc-500 overflow-x-auto hide-scrollbar">
         <div 
-          className="flex items-center gap-6 cursor-pointer group select-none"
+          className="flex items-center gap-4 md:gap-6 cursor-pointer group select-none w-full md:w-auto"
           onClick={() => setSummaryMode(prev => prev === 'daily' ? 'consolidated' : 'daily')}
           title="Clique para alternar entre Diário e Consolidado"
         >
-          <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-zinc-100 dark:bg-zinc-900/50 border border-zinc-200/50 dark:border-zinc-800/50 group-hover:border-emerald-500/30 transition-all duration-500">
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-zinc-100 dark:bg-zinc-900/50 border border-zinc-200/50 dark:border-zinc-800/50 group-hover:border-emerald-500/30 transition-all duration-500 whitespace-nowrap">
             <span className={`transition-colors duration-500 ${summaryMode === 'daily' ? 'text-emerald-600' : 'text-zinc-400'}`}>
               {summaryMode === 'daily' ? 'Diário' : 'Consolidado'}
             </span>
@@ -1258,18 +1125,21 @@ export default function App() {
               const overdue = displayTasks.filter(t => t.status !== 'Concluído' && new Date(t.deadline) < new Date()).length;
 
               return (
-                <div className="flex gap-6 ml-2">
+                <div className="flex gap-4 md:gap-6 ml-2">
                   <div className="flex items-center gap-2">
                     <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                    <span>Total: {total}</span>
+                    <span className="hidden sm:inline">Total: {total}</span>
+                    <span className="sm:hidden">{total}</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <div className="w-1.5 h-1.5 rounded-full bg-amber-500" />
-                    <span>Pendentes: {pending}</span>
+                    <span className="hidden sm:inline">Pendentes: {pending}</span>
+                    <span className="sm:hidden">{pending}</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <div className="w-1.5 h-1.5 rounded-full bg-red-500" />
-                    <span>Vencidos: {overdue}</span>
+                    <span className="hidden sm:inline">Vencidos: {overdue}</span>
+                    <span className="sm:hidden">{overdue}</span>
                   </div>
                 </div>
               );
