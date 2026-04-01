@@ -11,6 +11,5 @@ export interface Task {
   reason: string;
   description: string;
   createdAt: string;
-  deadline: string;
   status: TaskStatus;
 }

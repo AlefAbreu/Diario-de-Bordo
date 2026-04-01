@@ -208,19 +208,17 @@ const ListView: React.FC<{
     <div className="flex flex-col gap-3 pb-12 overflow-x-hidden md:overflow-x-auto custom-scrollbar">
       <div className="w-full md:min-w-[1100px]">
         {/* Desktop Header */}
-        <div className="hidden md:grid grid-cols-[40px_1.2fr_1fr_1.5fr_130px_130px_100px_80px] gap-4 px-8 py-4 premium-label border-b border-zinc-200/50 dark:border-zinc-800/50">
+        <div className="hidden md:grid grid-cols-[40px_1.2fr_1fr_1.5fr_130px_100px_80px] gap-4 px-8 py-4 premium-label border-b border-zinc-200/50 dark:border-zinc-800/50">
           <div></div>
           <div>Solicitante / Local</div>
           <div>Motivo / PN</div>
           <div>Ação Realizada</div>
           <div>Interação</div>
-          <div>Agendamento / Conclusão</div>
           <div>Status</div>
           <div className="text-right">Ações</div>
         </div>
         <AnimatePresence mode="popLayout">
           {tasks.map(task => {
-            const isOverdue = task.status !== 'Concluído' && new Date(task.deadline) < new Date();
             const isCompleted = task.status === 'Concluído';
             return (
               <motion.div
@@ -230,7 +228,7 @@ const ListView: React.FC<{
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.98 }}
                 onDoubleClick={() => onEdit(task)}
-                className={`flex flex-col md:grid md:grid-cols-[40px_1.2fr_1fr_1.5fr_130px_130px_100px_80px] gap-4 md:gap-6 items-start md:items-center px-4 py-4 md:px-10 md:py-6 bg-white dark:bg-[#111113] border border-zinc-200/40 dark:border-zinc-800/40 rounded-[1.5rem] md:rounded-[2rem] hover:shadow-premium hover:border-emerald-500/30 transition-all duration-700 group cursor-pointer mt-3 md:mt-4 ${isOverdue ? 'task-card-overdue' : ''} ${isCompleted ? 'opacity-60 hover:opacity-100' : ''}`}
+                className={`flex flex-col md:grid md:grid-cols-[40px_1.2fr_1fr_1.5fr_130px_100px_80px] gap-4 md:gap-6 items-start md:items-center px-4 py-4 md:px-10 md:py-6 bg-white dark:bg-[#111113] border border-zinc-200/40 dark:border-zinc-800/40 rounded-[1.5rem] md:rounded-[2rem] hover:shadow-premium hover:border-emerald-500/30 transition-all duration-700 group cursor-pointer mt-3 md:mt-4 ${isCompleted ? 'opacity-60 hover:opacity-100' : ''}`}
               >
                 {/* Mobile Header & Checkbox */}
                 <div className="flex items-center justify-between w-full md:w-auto md:justify-center">
@@ -259,7 +257,7 @@ const ListView: React.FC<{
 
                 {/* Desktop Solicitante / Local */}
                 <div className="hidden md:flex items-center gap-5 min-w-0">
-                  <div className={`w-1.5 h-10 rounded-full flex-shrink-0 transition-all duration-700 ${isOverdue ? 'bg-red-500/30 shadow-glow' : isCompleted ? 'bg-emerald-500/30' : 'bg-blue-500/30'}`} />
+                  <div className={`w-1.5 h-10 rounded-full flex-shrink-0 transition-all duration-700 ${isCompleted ? 'bg-emerald-500/30' : 'bg-blue-500/30'}`} />
                   <div className="truncate">
                     <p className={`text-sm font-bold truncate transition-colors duration-700 ${isCompleted ? 'line-through text-zinc-400 dark:text-zinc-600' : 'group-hover:text-emerald-600'}`}>{task.solicitante}</p>
                     <p className="premium-label truncate mt-1">{task.line}</p>
@@ -288,12 +286,6 @@ const ListView: React.FC<{
                   <div className="text-[10px] font-bold text-zinc-400 tracking-tight leading-tight">
                     <span className="md:hidden block mb-1 uppercase tracking-widest opacity-60">Interação</span>
                     {new Date(task.createdAt).toLocaleString('pt-BR').split(' ').map((p, i) => (
-                      <span key={i} className="mr-1 md:mr-0 md:block">{p}</span>
-                    ))}
-                  </div>
-                  <div className={`text-[10px] font-black leading-tight tracking-tight text-right md:text-left ${isOverdue ? 'text-red-500/80' : isCompleted ? 'text-emerald-600/50' : 'text-emerald-600/80'}`}>
-                    <span className="md:hidden block mb-1 uppercase tracking-widest opacity-60 text-zinc-400">Prazo</span>
-                    {new Date(task.deadline).toLocaleString('pt-BR').split(' ').map((p, i) => (
                       <span key={i} className="mr-1 md:mr-0 md:block">{p}</span>
                     ))}
                   </div>
@@ -352,8 +344,7 @@ const TaskModal = ({ task, isOpen, onClose, onSave }: ModalProps) => {
     pn: '',
     reason: '',
     description: '',
-    createdAt: new Date().toISOString().slice(0, 16),
-    deadline: new Date().toISOString().slice(0, 16),
+    createdAt: new Date().toISOString(),
     status: 'A Fazer'
   });
 
@@ -381,8 +372,7 @@ const TaskModal = ({ task, isOpen, onClose, onSave }: ModalProps) => {
         pn: '',
         reason: '',
         description: '',
-        createdAt: new Date().toISOString().slice(0, 16),
-        deadline: new Date().toISOString().slice(0, 16),
+        createdAt: new Date().toISOString(),
         status: 'A Fazer'
       });
       setIsCustomLocal(false);
@@ -428,7 +418,7 @@ const TaskModal = ({ task, isOpen, onClose, onSave }: ModalProps) => {
                 e.preventDefault();
                 const updatedTask = {
                   ...formData,
-                  createdAt: task ? formData.createdAt : new Date().toISOString().slice(0, 16)
+                  createdAt: task ? formData.createdAt : new Date().toISOString()
                 };
                 onSave(updatedTask as Task);
               }} className="space-y-8">
@@ -535,19 +525,6 @@ const TaskModal = ({ task, isOpen, onClose, onSave }: ModalProps) => {
                   </div>
                 </div>
 
-                <div className="space-y-2">
-                  <label className="premium-label block ml-1">
-                    {formData.status === 'Concluído' ? 'Data e Hora de Conclusão' : 'Data e Hora do Agendamento'}
-                  </label>
-                  <input 
-                    type="datetime-local"
-                    required
-                    className="input-field"
-                    value={formData.deadline}
-                    onChange={e => setFormData({...formData, deadline: e.target.value})}
-                  />
-                </div>
-
                 <div className="pt-4 flex gap-3">
                   <button 
                     type="button"
@@ -586,9 +563,7 @@ export default function App() {
   const [isLoading, setIsLoading] = useState(true);
   const [toast, setToast] = useState<{ message: string, type: 'success' | 'error' | 'warning' } | null>(null);
 
-  const [upcomingDeadlines, setUpcomingDeadlines] = useState<Task[]>([]);
   const [summaryMode, setSummaryMode] = useState<'daily' | 'consolidated'>('consolidated');
-  const [showNotifications, setShowNotifications] = useState(false);
 
   useEffect(() => {
     const init = async () => {
@@ -598,58 +573,10 @@ export default function App() {
     init();
   }, []);
 
-  useEffect(() => {
-    const interval = setInterval(() => {
-      checkUpcomingDeadlines(tasks);
-    }, 60000); // Check every minute
-    return () => clearInterval(interval);
-  }, [tasks]);
-
-  useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
-      if (showNotifications && !(e.target as Element).closest('.notifications-container')) {
-        setShowNotifications(false);
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [showNotifications]);
-
   const loadTasks = async () => {
     const all = await dbService.getAllTasks();
     setTasks(all);
     setIsLoading(false);
-    checkUpcomingDeadlines(all);
-  };
-
-  const checkUpcomingDeadlines = (allTasks: Task[]) => {
-    const now = new Date();
-    const next24h = new Date(now.getTime() + 24 * 60 * 60 * 1000);
-    
-    const overdue = allTasks.filter(t => {
-      if (t.status === 'Concluído') return false;
-      const deadline = new Date(t.deadline);
-      return deadline <= now;
-    });
-
-    const upcoming = allTasks.filter(t => {
-      if (t.status === 'Concluído') return false;
-      const deadline = new Date(t.deadline);
-      return deadline > now && deadline <= next24h;
-    });
-
-    setUpcomingDeadlines([...overdue, ...upcoming]);
-    
-    if (overdue.length > 0 || upcoming.length > 0) {
-      const message = overdue.length > 0 
-        ? `Você tem ${overdue.length} tarefa(s) VENCIDAS e ${upcoming.length} próximas do prazo!`
-        : `Você tem ${upcoming.length} tarefa(s) com prazo próximo!`;
-      
-      setToast({ 
-        message, 
-        type: overdue.length > 0 ? 'error' : 'warning' 
-      });
-    }
   };
 
   const handleSaveTask = async (task: Task) => {
@@ -673,9 +600,6 @@ export default function App() {
     try {
       const newStatus: TaskStatus = task.status === 'Concluído' ? 'A Fazer' : 'Concluído';
       const updatedTask = { ...task, status: newStatus };
-      if (newStatus === 'Concluído') {
-        updatedTask.deadline = new Date().toISOString().slice(0, 16);
-      }
       await dbService.updateTask(updatedTask);
       setToast({ message: `Tarefa marcada como ${newStatus}!`, type: 'success' });
       loadTasks();
@@ -715,8 +639,7 @@ export default function App() {
       'PN': t.pn,
       'Ação': t.description,
       'Status': t.status,
-      'Interação': new Date(t.createdAt).toLocaleString('pt-BR'),
-      'Agendamento / Conclusão': new Date(t.deadline).toLocaleString('pt-BR')
+      'Interação': new Date(t.createdAt).toLocaleString('pt-BR')
     }));
 
     // Create worksheet
@@ -732,8 +655,7 @@ export default function App() {
       { wch: 15 }, // PN
       { wch: 40 }, // Ação
       { wch: 15 }, // Status
-      { wch: 20 }, // Interação
-      { wch: 25 }  // Agendamento / Conclusão
+      { wch: 20 }  // Interação
     ];
     ws['!cols'] = wscols;
 
@@ -793,12 +715,12 @@ export default function App() {
     if (!matchesSearch) return false;
 
     if (startDate) {
-      const taskDate = new Date(t.deadline).toISOString().split('T')[0];
+      const taskDate = new Date(t.createdAt).toISOString().split('T')[0];
       if (taskDate < startDate) return false;
     }
 
     if (endDate) {
-      const taskDate = new Date(t.deadline).toISOString().split('T')[0];
+      const taskDate = new Date(t.createdAt).toISOString().split('T')[0];
       if (taskDate > endDate) return false;
     }
 
@@ -806,8 +728,6 @@ export default function App() {
   });
 
   const columns: TaskStatus[] = ['A Fazer', 'Em Andamento', 'Concluído'];
-  const hasOverdue = upcomingDeadlines.some(t => new Date(t.deadline) <= new Date());
-  const hasUpcoming = upcomingDeadlines.some(t => new Date(t.deadline) > new Date());
 
   if (isLoading) {
     return (
@@ -835,21 +755,6 @@ export default function App() {
             </div>
             {/* Mobile Actions */}
             <div className="flex md:hidden items-center gap-2">
-              <div className="relative notifications-container">
-                <button 
-                  onClick={() => setShowNotifications(!showNotifications)}
-                  className={`p-2.5 rounded-xl transition-all relative ${
-                    hasOverdue ? 'bg-red-50 text-red-500 border border-red-200/50 dark:bg-red-900/10 dark:border-red-800/30' : 
-                    hasUpcoming ? 'bg-amber-50 text-amber-500 border border-amber-200/50 dark:bg-amber-900/10 dark:border-amber-800/30' : 
-                    'hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300 border border-transparent'
-                  }`}
-                >
-                  <Bell size={18} />
-                  {(hasOverdue || hasUpcoming) && (
-                    <span className={`absolute top-2 right-2 w-2 h-2 rounded-full border-2 border-white dark:border-[#111113] ${hasOverdue ? 'bg-red-500' : 'bg-amber-500'} animate-pulse`} />
-                  )}
-                </button>
-              </div>
               <ThemeToggle theme={theme} onToggle={toggleTheme} />
             </div>
           </div>
@@ -867,132 +772,6 @@ export default function App() {
           </div>
 
           <div className="hidden md:flex items-center gap-2 shrink-0">
-            <div className="relative notifications-container">
-              <button 
-                onClick={() => setShowNotifications(!showNotifications)}
-                className={`p-2.5 rounded-xl transition-all relative ${
-                  upcomingDeadlines.length > 0 
-                    ? (hasOverdue ? 'text-red-500 bg-red-50 dark:bg-red-900/20 shadow-sm' : 'text-amber-500 bg-amber-50 dark:bg-amber-900/20 shadow-sm')
-                    : 'text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-800'
-                }`}
-                title="Notificações de Prazo"
-              >
-                <Bell size={20} />
-                {upcomingDeadlines.length > 0 && (
-                  <span className={`absolute top-2 right-2 w-2.5 h-2.5 rounded-full border-2 border-white dark:border-zinc-900 animate-pulse ${hasOverdue ? 'bg-red-500' : 'bg-amber-500'}`} />
-                )}
-              </button>
-
-              <AnimatePresence>
-                {showNotifications && (
-                  <>
-                    <motion.div 
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      exit={{ opacity: 0 }}
-                      onClick={() => setShowNotifications(false)}
-                      className="fixed inset-0 bg-zinc-950/60 backdrop-blur-sm z-[100]"
-                    />
-                    <div className="fixed inset-0 flex items-center justify-center pointer-events-none z-[101] p-4">
-                      <motion.div 
-                        initial={{ opacity: 0, scale: 0.95, y: 20 }}
-                        animate={{ opacity: 1, scale: 1, y: 0 }}
-                        exit={{ opacity: 0, scale: 0.95, y: 20 }}
-                        className="w-full max-w-md bg-white dark:bg-[#0c0c0e] border border-zinc-200/50 dark:border-zinc-800/50 rounded-[2.5rem] shadow-premium overflow-hidden pointer-events-auto"
-                      >
-                        <div className="p-8 border-b border-zinc-100 dark:border-zinc-800/50 bg-zinc-50/50 dark:bg-zinc-900/30 flex justify-between items-center">
-                          <div className="flex items-center gap-4">
-                            <div className={`p-2.5 rounded-2xl ${hasOverdue ? 'bg-red-500/10 text-red-500' : 'bg-amber-500/10 text-amber-500'}`}>
-                              <Bell size={20} />
-                            </div>
-                            <div>
-                              <h3 className="text-sm font-bold text-zinc-900 dark:text-white">Notificações</h3>
-                              <p className="premium-label">Acompanhe seus prazos</p>
-                            </div>
-                          </div>
-                          <button 
-                            onClick={() => setShowNotifications(false)}
-                            className="p-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-full text-zinc-400 transition-all"
-                          >
-                            <X size={20} />
-                          </button>
-                        </div>
-                        
-                        <div className="max-h-[60vh] overflow-y-auto p-6 custom-scrollbar">
-                          {upcomingDeadlines.length === 0 ? (
-                            <div className="py-16 text-center">
-                              <div className="w-20 h-20 bg-zinc-50 dark:bg-zinc-900 rounded-full flex items-center justify-center mx-auto mb-6 border border-zinc-100 dark:border-zinc-800/50">
-                                <Bell size={32} className="text-zinc-200 dark:text-zinc-800" />
-                              </div>
-                              <p className="text-zinc-900 dark:text-white text-sm font-bold">Tudo em dia!</p>
-                              <p className="text-zinc-400 text-xs mt-2">Nenhum prazo crítico no momento.</p>
-                            </div>
-                          ) : (
-                            <div className="space-y-4">
-                              <p className="premium-label px-2">Críticos e Vencidos</p>
-                              {upcomingDeadlines.map(task => {
-                                const isOverdue = new Date(task.deadline) <= new Date();
-                                return (
-                                  <div 
-                                    key={task.id} 
-                                    onClick={() => {
-                                      setEditingTask(task);
-                                      setIsModalOpen(true);
-                                      setShowNotifications(false);
-                                    }}
-                                    className={`p-5 rounded-[2rem] transition-all border group cursor-pointer hover-lift ${
-                                      isOverdue 
-                                        ? 'bg-red-50/30 dark:bg-red-900/5 border-red-200/30 dark:border-red-800/20' 
-                                        : 'bg-amber-50/20 dark:bg-amber-900/5 border-amber-200/20 dark:border-amber-800/10'
-                                    }`}
-                                  >
-                                    <div className="flex justify-between items-start gap-4">
-                                      <div className="flex-1 min-w-0">
-                                        <p className="text-sm font-bold text-zinc-800 dark:text-zinc-100 truncate group-hover:text-emerald-600 transition-colors">
-                                          {task.solicitante}
-                                        </p>
-                                        <p className="text-[10px] text-zinc-400 mt-1 truncate">{task.line}</p>
-                                        <div className="flex items-center gap-3 mt-4">
-                                          <span className={`text-[9px] font-bold px-2.5 py-0.5 rounded-full uppercase tracking-widest border ${
-                                            isOverdue 
-                                              ? 'text-red-500 border-red-200/30 bg-red-500/5' 
-                                              : 'text-amber-500 border-amber-200/30 bg-amber-500/5'
-                                          }`}>
-                                            {isOverdue ? 'Vencido' : 'Próximo'}
-                                          </span>
-                                          <div className="flex items-center gap-1.5 text-zinc-400">
-                                            <Clock size={12} />
-                                            <p className="text-[10px] font-bold tracking-tight">
-                                              {new Date(task.deadline).toLocaleString('pt-BR')}
-                                            </p>
-                                          </div>
-                                        </div>
-                                      </div>
-                                      <div className="p-2.5 bg-white dark:bg-zinc-900 rounded-2xl shadow-soft border border-zinc-100 dark:border-zinc-800 opacity-0 group-hover:opacity-100 transition-all translate-x-2 group-hover:translate-x-0">
-                                        <Pencil size={14} className="text-emerald-600" />
-                                      </div>
-                                    </div>
-                                  </div>
-                                );
-                              })}
-                            </div>
-                          )}
-                        </div>
-                        
-                        <div className="p-6 bg-zinc-50/50 dark:bg-zinc-900/30 border-t border-zinc-100 dark:border-zinc-800/50 text-center">
-                          <button 
-                            onClick={() => setShowNotifications(false)}
-                            className="premium-label hover:text-zinc-900 dark:hover:text-white transition-colors"
-                          >
-                            Fechar Notificações
-                          </button>
-                        </div>
-                      </motion.div>
-                    </div>
-                  </>
-                )}
-              </AnimatePresence>
-            </div>
             <ThemeToggle theme={theme} onToggle={toggleTheme} />
             <div className="w-px h-6 bg-zinc-200 dark:bg-zinc-800 mx-2" />
             <button 
@@ -1124,12 +903,11 @@ export default function App() {
             {(() => {
               const today = new Date().toISOString().split('T')[0];
               const displayTasks = summaryMode === 'daily' 
-                ? tasks.filter(t => t.deadline.startsWith(today) || t.createdAt.startsWith(today))
+                ? tasks.filter(t => t.createdAt.startsWith(today))
                 : tasks;
               
               const total = displayTasks.length;
               const pending = displayTasks.filter(t => t.status !== 'Concluído').length;
-              const overdue = displayTasks.filter(t => t.status !== 'Concluído' && new Date(t.deadline) < new Date()).length;
 
               return (
                 <div className="flex gap-4 md:gap-6 ml-2">
@@ -1142,11 +920,6 @@ export default function App() {
                     <div className="w-1.5 h-1.5 rounded-full bg-amber-500" />
                     <span className="hidden sm:inline">Pendentes: {pending}</span>
                     <span className="sm:hidden">{pending}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="w-1.5 h-1.5 rounded-full bg-red-500" />
-                    <span className="hidden sm:inline">Vencidos: {overdue}</span>
-                    <span className="sm:hidden">{overdue}</span>
                   </div>
                 </div>
               );
